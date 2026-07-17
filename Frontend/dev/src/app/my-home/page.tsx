@@ -5,7 +5,12 @@ import { Pill, SectionHeader } from "@/components/ui";
 import { Screen } from "@/components/layout/Screen";
 import { getAppliances, deleteAppliance } from "@/lib/data";
 import type { Appliance, ApplianceType } from "@/lib/types";
-import { ScanButton, ScanSweep, useScan } from "@/components/myhome/ScanButton";
+import {
+  ScanButton,
+  ScanSweep,
+  UploadPhotoButton,
+  useScan,
+} from "@/components/myhome/ScanButton";
 import { ApplianceList } from "@/components/myhome/ApplianceList";
 import { AddApplianceForm } from "@/components/myhome/AddApplianceForm";
 import {
@@ -74,12 +79,20 @@ export default function MyHomePage() {
         </p>
       </header>
 
-      {/* Delta 4 — Scan (primary) + Import (secondary) side by side, equal width.
+      {/* Scan (primary) + Upload photo + Import bill — equal-width row.
           Stacks to full-width on very small screens. Panels render below the row. */}
       <div className="flex flex-wrap gap-2 max-[340px]:flex-col">
         <ScanButton
           scanning={scan.scanning}
           onScan={scan.scan}
+          className="flex-1 min-w-[140px]"
+        />
+        <UploadPhotoButton
+          inputRef={scan.inputRef}
+          inputId={scan.inputId}
+          scanning={scan.scanning}
+          onOpen={scan.openUpload}
+          handleFile={scan.handleFile}
           className="flex-1 min-w-[140px]"
         />
         <ImportBillButton
@@ -95,7 +108,7 @@ export default function MyHomePage() {
         The agent reads your bill to learn your habits and plan around your rate plan.
       </p>
 
-      <ScanSweep scanning={scan.scanning} />
+      <ScanSweep scanning={scan.scanning} previewUrl={scan.previewUrl} />
       <ImportBillSummary inputId={bill.inputId} phase={bill.phase} summary={bill.summary} />
 
       <div className="mt-5">
