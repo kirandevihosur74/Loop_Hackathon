@@ -1,23 +1,19 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { color } from "@/lib/tokens";
+import { cssVar } from "@/lib/tokens";
 import { ease } from "@/lib/motion";
-
-/** Score at/above which the ring reads as "good" (green) vs. "could do better" (amber). */
-const GOOD_THRESHOLD = 60;
 
 /**
  * Hero ring for the timing score — the % of power used during cheap / clean hours.
- * Stroke is green when the score is high, amber when lower. The sweep animates in
- * (skipped when the user prefers reduced motion).
+ * The arc is always the brand gold on a neutral track; the sweep animates in
+ * (skipped when the user prefers reduced motion). Theme-aware via cssVar.
  */
 export function TimingRing({ pct }: { pct: number }) {
   const reduce = useReducedMotion();
   const clamped = Math.max(0, Math.min(100, pct));
-  const good = clamped >= GOOD_THRESHOLD;
-  const stroke = good ? color.green : color.amber;
-  const track = good ? color.greenLight : color.amberLight;
+  const stroke = cssVar.gold;
+  const track = cssVar.line;
 
   const size = 200;
   const strokeW = 16;
@@ -56,11 +52,11 @@ export function TimingRing({ pct }: { pct: number }) {
           textAnchor="middle"
           fontSize="44"
           fontWeight="700"
-          fill={color.ink}
+          fill={cssVar.ink}
         >
           {clamped}%
         </text>
-        <text x={cx} y={cy + 22} textAnchor="middle" fontSize="13" fill={color.sub}>
+        <text x={cx} y={cy + 22} textAnchor="middle" fontSize="13" fill={cssVar.sub}>
           cheap / clean
         </text>
       </svg>

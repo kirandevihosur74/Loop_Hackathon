@@ -4,20 +4,24 @@ import { useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { PrimaryButton } from "@/components/ui";
 import { scanAppliance } from "@/lib/data";
-import { color } from "@/lib/tokens";
+import { cssVar } from "@/lib/tokens";
 import { ease } from "@/lib/motion";
 import type { Appliance } from "@/lib/types";
 
 /**
- * Stubbed "camera" scan. On tap it plays a brief simulated-scan sweep (~1.5s,
- * reduced-motion aware), then awaits scanAppliance() and hands the detected
- * appliance up to the parent to append to the list.
+ * Stubbed "camera" scan behavior. On scan() it plays a brief simulated-scan
+ * sweep (~1.5s, reduced-motion aware), then awaits scanAppliance() and hands
+ * the detected appliance up to the parent to prepend to the list.
+ *
+ * State lives in this hook so the trigger button can sit in the shared action
+ * row (half width) while the sweep panel (<ScanSweep/>) renders full-width
+ * below the row.
  */
-export function ScanButton({ onScanned }: { onScanned: (a: Appliance) => void }) {
+export function useScan(onScanned: (a: Appliance) => void) {
   const reduce = useReducedMotion();
   const [scanning, setScanning] = useState(false);
 
-  async function handleScan() {
+  async function scan() {
     if (scanning) return;
     setScanning(true);
     try {
@@ -30,54 +34,77 @@ export function ScanButton({ onScanned }: { onScanned: (a: Appliance) => void })
     }
   }
 
+  return { scanning, scan };
+}
+
+/** The primary (filled gold) trigger — lives in the side-by-side action row. */
+export function ScanButton({
+  scanning,
+  onScan,
+  className,
+}: {
+  scanning: boolean;
+  onScan: () => void;
+  className?: string;
+}) {
   return (
-    <div>
-      <PrimaryButton onClick={handleScan} disabled={scanning} aria-busy={scanning}>
-        <CameraIcon />
-        {scanning ? "Scanning…" : "Scan an appliance"}
-      </PrimaryButton>
+    <PrimaryButton
+      onClick={onScan}
+      disabled={scanning}
+      aria-busy={scanning}
+      className={className}
+    >
+      <CameraIcon />
+      {scanning ? "Scanning…" : "Scan appliance"}
+    </PrimaryButton>
+  );
+}
 
-      <AnimatePresence>
-        {scanning && (
-          <motion.div
-            initial={reduce ? { opacity: 1 } : { opacity: 0, height: 0 }}
-            animate={reduce ? { opacity: 1 } : { opacity: 1, height: "auto" }}
-            exit={reduce ? { opacity: 0 } : { opacity: 0, height: 0 }}
-            transition={{ duration: 0.28, ease }}
-            className="overflow-hidden"
-          >
-            <div className="mt-3 flex h-28 items-center justify-center overflow-hidden rounded-lg bg-card shadow-soft ring-1 ring-line">
-              <div className="relative h-full w-full">
-                {/* Framing brackets */}
-                <div className="pointer-events-none absolute inset-4">
-                  <span className="absolute left-0 top-0 h-4 w-4 rounded-tl-sm border-l-2 border-t-2 border-green" />
-                  <span className="absolute right-0 top-0 h-4 w-4 rounded-tr-sm border-r-2 border-t-2 border-green" />
-                  <span className="absolute bottom-0 left-0 h-4 w-4 rounded-bl-sm border-b-2 border-l-2 border-green" />
-                  <span className="absolute bottom-0 right-0 h-4 w-4 rounded-br-sm border-b-2 border-r-2 border-green" />
-                </div>
+/** The simulated-scan viewfinder sweep — renders full-width below the row. */
+export function ScanSweep({ scanning }: { scanning: boolean }) {
+  const reduce = useReducedMotion();
 
-                {reduce ? (
-                  <div className="flex h-full items-center justify-center">
-                    <span className="text-sm font-semibold text-sub">Detecting appliance…</span>
-                  </div>
-                ) : (
-                  <motion.div
-                    aria-hidden="true"
-                    className="absolute inset-x-6 h-0.5 rounded-pill"
-                    style={{
-                      background: `linear-gradient(90deg, transparent, ${color.green}, transparent)`,
-                    }}
-                    initial={{ top: "18%" }}
-                    animate={{ top: ["18%", "82%", "18%"] }}
-                    transition={{ duration: 1.4, ease, repeat: Infinity }}
-                  />
-                )}
+  return (
+    <AnimatePresence>
+      {scanning && (
+        <motion.div
+          initial={reduce ? { opacity: 1 } : { opacity: 0, height: 0 }}
+          animate={reduce ? { opacity: 1 } : { opacity: 1, height: "auto" }}
+          exit={reduce ? { opacity: 0 } : { opacity: 0, height: 0 }}
+          transition={{ duration: 0.28, ease }}
+          className="overflow-hidden"
+        >
+          <div className="mt-3 flex h-28 items-center justify-center overflow-hidden rounded-md bg-card shadow-soft ring-1 ring-line">
+            <div className="relative h-full w-full">
+              {/* Framing brackets */}
+              <div className="pointer-events-none absolute inset-4">
+                <span className="absolute left-0 top-0 h-4 w-4 rounded-tl-sm border-l-2 border-t-2 border-gold" />
+                <span className="absolute right-0 top-0 h-4 w-4 rounded-tr-sm border-r-2 border-t-2 border-gold" />
+                <span className="absolute bottom-0 left-0 h-4 w-4 rounded-bl-sm border-b-2 border-l-2 border-gold" />
+                <span className="absolute bottom-0 right-0 h-4 w-4 rounded-br-sm border-b-2 border-r-2 border-gold" />
               </div>
+
+              {reduce ? (
+                <div className="flex h-full items-center justify-center">
+                  <span className="text-sm font-semibold text-sub">Detecting appliance…</span>
+                </div>
+              ) : (
+                <motion.div
+                  aria-hidden="true"
+                  className="absolute inset-x-6 h-0.5 rounded-pill"
+                  style={{
+                    background: `linear-gradient(90deg, transparent, ${cssVar.gold}, transparent)`,
+                  }}
+                  initial={{ top: "18%" }}
+                  animate={{ top: ["18%", "82%", "18%"] }}
+                  transition={{ duration: 1.4, ease, repeat: Infinity }}
+                />
+              )}
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 

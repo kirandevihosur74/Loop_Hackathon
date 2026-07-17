@@ -11,7 +11,7 @@ export function GhostButton({
     <button
       type="button"
       className={cn(
-        "inline-flex min-h-[48px] items-center justify-center gap-2 rounded-pill bg-card px-5 text-base font-semibold text-sub ring-1 ring-line transition-[transform,color] active:scale-[0.98] hover:text-ink",
+        "inline-flex min-h-[48px] items-center justify-center gap-2 rounded-md bg-gold-tint px-5 text-base font-semibold text-gold-deep ring-1 ring-line transition-[transform,color] active:scale-[0.98] hover:text-ink",
         className,
       )}
       {...props}

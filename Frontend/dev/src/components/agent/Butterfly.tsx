@@ -3,12 +3,44 @@
 import { useEffect, useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ease } from "@/lib/motion";
+import { cssVar } from "@/lib/tokens";
 
 /**
- * The mascot — a calm butterfly that plays while the agent is working and rests
- * on its poster frame when idle. Respects prefers-reduced-motion: when set, we
- * never autoplay and simply show the poster image (and skip the idle bob).
+ * The mascot — a calm peach/yellow butterfly. When the agent is working the
+ * wings flutter (the looping video) over a soft hover-bob, and gold concentric
+ * rings pulse outward behind it like a gentle radar ("thinking"). Idle: a slow
+ * bob, rings gone, poster frame at rest. Reduced motion: a static butterfly with
+ * no flutter, no bob, no rings — information is never gated behind motion.
  */
+
+/** Soft pulsing concentric rings — a "thinking" radar, gold, only while working. */
+function PulseRings() {
+  const rings = [0, 0.55, 1.1];
+  return (
+    <div className="pointer-events-none absolute inset-0 flex items-center justify-center" aria-hidden>
+      {rings.map((delay, i) => (
+        <motion.span
+          key={i}
+          className="absolute rounded-full"
+          style={{
+            height: 96,
+            width: 96,
+            border: `1.5px solid ${cssVar.gold}`,
+          }}
+          initial={{ scale: 0.6, opacity: 0 }}
+          animate={{ scale: [0.6, 1.9], opacity: [0.35, 0] }}
+          transition={{
+            duration: 1.7,
+            ease,
+            repeat: Infinity,
+            delay,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 export function Butterfly({ working }: { working: boolean }) {
   const reduce = useReducedMotion();
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -25,18 +57,21 @@ export function Butterfly({ working }: { working: boolean }) {
     }
   }, [working, reduce]);
 
-  const bob = !reduce && !working;
+  // Bob in both live states; working gets a smaller, quicker hover.
+  const bob = reduce ? null : working ? [0, -5, 0] : [0, -8, 0];
 
   return (
-    <div className="flex justify-center">
+    <div className="relative flex justify-center">
+      {!reduce && working && <PulseRings />}
+
       <motion.div
         // bg-bg gives mix-blend-multiply a painted backdrop inside this
         // transformed stacking context, so the asset's white ground melts away.
-        className="relative h-40 w-40 bg-bg"
-        animate={bob ? { y: [0, -8, 0] } : { y: 0 }}
+        className="relative z-[1] h-40 w-40 bg-bg"
+        animate={bob ? { y: bob } : { y: 0 }}
         transition={
           bob
-            ? { duration: 3.2, ease, repeat: Infinity }
+            ? { duration: working ? 2.2 : 3.2, ease, repeat: Infinity }
             : { duration: 0.3, ease }
         }
       >

@@ -15,7 +15,7 @@ import { TrustLedger } from "@/components/agent/TrustLedger";
 const NEXT_CHECK_SECONDS = 15 * 60;
 
 // Streaming cadence (ms).
-const ROW_GAP = 780; // between the start of each check row
+const ROW_GAP = 600; // between the start of each check row
 const ROW_SETTLE = 460; // spinner → finding within a row
 const CORRECTION_LEAD = 600; // pause before the self-correction reveals
 const CORRECTION_ROOM = 2600; // time given to the self-correction beat
@@ -32,6 +32,8 @@ export default function AgentPage() {
   const [showCorrection, setShowCorrection] = useState(false);
 
   const [remaining, setRemaining] = useState(NEXT_CHECK_SECONDS);
+  // Completed runs this session — lifts the trust-ledger count so it animates up.
+  const [runsCompleted, setRunsCompleted] = useState(0);
 
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const clearTimers = useCallback(() => {
@@ -84,6 +86,7 @@ export default function AgentPage() {
       if (result.selfCorrected) setShowCorrection(true);
       setWorking(false);
       setBusy(false);
+      setRunsCompleted((n) => n + 1);
       return;
     }
 
@@ -111,6 +114,7 @@ export default function AgentPage() {
         setTimeout(() => {
           setWorking(false);
           setBusy(false);
+          setRunsCompleted((n) => n + 1);
         }, afterChecks + CORRECTION_LEAD + CORRECTION_ROOM),
       );
     } else {
@@ -118,6 +122,7 @@ export default function AgentPage() {
         setTimeout(() => {
           setWorking(false);
           setBusy(false);
+          setRunsCompleted((n) => n + 1);
         }, afterChecks + 300),
       );
     }
@@ -158,7 +163,7 @@ export default function AgentPage() {
 
           {/* Fallback: if the agent didn't self-correct, surface the final rec. */}
           {checksDone && !run.selfCorrected && (
-            <Card className="bg-green-light">
+            <Card className="bg-gold-tint">
               <div className="flex items-start justify-between gap-3">
                 <p className="text-sm font-semibold text-ink">{run.result.title}</p>
                 <ConfidenceBadge level={run.result.confidence} className="shrink-0" />
@@ -177,7 +182,7 @@ export default function AgentPage() {
             <div className="h-16 animate-pulse rounded-lg bg-card" />
           </div>
         ) : (
-          <TrustLedger entries={ledger} />
+          <TrustLedger entries={ledger} bump={runsCompleted} />
         )}
       </div>
     </Screen>

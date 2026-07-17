@@ -1,9 +1,16 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import type { HourUsage } from "@/lib/types";
-import { color, gridColor, gridLabel } from "@/lib/tokens";
+import type { HourUsage, GridState } from "@/lib/types";
+import { cssVar, gridLabel } from "@/lib/tokens";
 import { ease } from "@/lib/motion";
+
+/** Grid price state → theme-aware price-ramp CSS var (follows day/night). */
+const rampVar: Record<GridState, string> = {
+  cheap: cssVar.cheap,
+  medium: cssVar.medium,
+  expensive: cssVar.peak,
+};
 
 /** Format an hour (0–23) as a compact clock label like "6a" / "12p". */
 function hourLabel(h: number): string {
@@ -14,7 +21,7 @@ function hourLabel(h: number): string {
 
 /**
  * 24-bar chart of hourly kWh, each bar tinted by that hour's grid price
- * (green cheap / amber medium / red peak) — "when you used vs. when it was cheap".
+ * (yellow cheap / orange medium / rust peak) — "when you used vs. when it was cheap".
  */
 export function HourlyBars({ hourly }: { hourly: HourUsage[] }) {
   const reduce = useReducedMotion();
@@ -58,7 +65,7 @@ export function HourlyBars({ hourly }: { hourly: HourUsage[] }) {
               x={x}
               width={barW}
               rx={2}
-              fill={gridColor[h.gridState].base}
+              fill={rampVar[h.gridState]}
               initial={reduce ? { y, height: barH } : { y: chartH, height: 0 }}
               animate={{ y, height: barH }}
               transition={reduce ? { duration: 0 } : { duration: 0.5, delay: i * 0.012, ease }}
@@ -76,7 +83,7 @@ export function HourlyBars({ hourly }: { hourly: HourUsage[] }) {
               y={height - 3}
               textAnchor="middle"
               fontSize="10"
-              fill={color.sub}
+              fill={cssVar.sub}
             >
               {hourLabel(t)}
             </text>
@@ -87,8 +94,8 @@ export function HourlyBars({ hourly }: { hourly: HourUsage[] }) {
         {(["cheap", "medium", "expensive"] as const).map((g) => (
           <span key={g} className="inline-flex items-center gap-1.5 text-xs text-sub">
             <span
-              className="inline-block h-2.5 w-2.5 rounded-sm"
-              style={{ backgroundColor: gridColor[g].base }}
+              className="inline-block h-2.5 w-2.5 rounded-full"
+              style={{ backgroundColor: rampVar[g] }}
               aria-hidden
             />
             {gridLabel[g]}

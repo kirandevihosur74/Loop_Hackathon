@@ -2,7 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { StatTile } from "@/components/ui";
-import { color } from "@/lib/tokens";
+import { cssVar } from "@/lib/tokens";
 import { ease } from "@/lib/motion";
 
 /** A single labelled benchmark bar (you vs. neighbors). */
@@ -26,13 +26,13 @@ function BenchBar({
         <span className="tabular-nums font-semibold text-ink">${amount.toFixed(2)}</span>
       </div>
       <div
-        className="mt-1 h-3 w-full overflow-hidden rounded-pill"
-        style={{ backgroundColor: color.line }}
+        className="mt-1 h-3 w-full overflow-hidden rounded-sm"
+        style={{ backgroundColor: cssVar.line }}
         role="img"
         aria-label={`${label}: $${amount.toFixed(2)} for this range.`}
       >
         <motion.div
-          className="h-full rounded-pill"
+          className="h-full rounded-sm"
           style={{ backgroundColor: fill }}
           initial={reduce ? { width: `${pct}%` } : { width: 0 }}
           animate={{ width: `${pct}%` }}
@@ -44,7 +44,7 @@ function BenchBar({
 }
 
 /**
- * Savings block: a green headline tile for money saved this month, plus a
+ * Savings block: a gold headline tile for money saved this month, plus a
  * two-bar "vs neighbors" benchmark comparing your spend to a typical neighbor.
  */
 export function SavingsCard({
@@ -67,6 +67,7 @@ export function SavingsCard({
         value={`$${savedThisMonthUsd.toFixed(2)}`}
         hint="from letting the agent shift your usage to cheaper hours"
         tone="green"
+        className="bg-gold-tint"
       />
       <div className="rounded-lg bg-card p-4 shadow-soft">
         <div className="mb-3 text-sm font-semibold text-ink">
@@ -79,13 +80,13 @@ export function SavingsCard({
             label="You"
             amount={youSpendUsd}
             fraction={youSpendUsd / max}
-            fill={cheaper ? color.green : color.red}
+            fill={cheaper ? cssVar.gold : cssVar.peak}
           />
           <BenchBar
             label="Neighbors' avg"
             amount={neighborsAvgUsd}
             fraction={neighborsAvgUsd / max}
-            fill={color.sub}
+            fill={cssVar.sub}
           />
         </div>
       </div>

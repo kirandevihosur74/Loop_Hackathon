@@ -6,3 +6,4 @@ export { StatTile } from "./StatTile";
 export { SectionHeader } from "./SectionHeader";
 export { PrimaryButton } from "./PrimaryButton";
 export { GhostButton } from "./GhostButton";
+export { ThemeToggle } from "./ThemeToggle";

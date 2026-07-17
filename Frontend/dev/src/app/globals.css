@@ -1,45 +1,136 @@
 @import "tailwindcss";
 
+/* Tailwind darkMode:'class' → wired to the `night` class on <html>. */
+@custom-variant dark (&:where(.night, .night *));
+
 /*
-  Loop — design tokens (Tailwind v4, CSS-first).
-  Semantic color vocabulary is STRICT: nothing gets a color outside this scale,
-  or the colors stop meaning things.
-    green  = resolved / cheap / clean / good
-    amber  = in-progress / medium / needs-you
-    red    = needs attention / expensive / peak
-    gray   = neutral / upcoming / disabled
+  Powerfly — warm design tokens with a day/night theme.
+
+  Palette is delivered as CSS variables: DAY values on :root, NIGHT overrides
+  under `html.night`. @theme maps them to Tailwind utilities so a single token
+  edit cascades everywhere (no per-component hardcoding).
+
+  Semantic vocabulary (STRICT):
+    gold                = brand / primary / savings / active / "good"
+    price ramp          = cheap (yellow) · medium (orange) · peak (rust)
+    ink / sub / line    = text + hairlines
+    bg / card           = surfaces
+  Confidence is always a Low / Med / High band — never a fake percentage.
   Keep this file and src/lib/tokens.ts (raw hex for hand-rolled SVG) in sync.
 */
 
+:root {
+  /* surfaces */
+  --bg: #fbf7f0;
+  --card: #ffffff;
+  --card-elevated: #ffffff;
+  --nav: #ffffff;
+
+  /* text + lines */
+  --ink: #2a2620;
+  --sub: #8c8375;
+  --line: #efe7da;
+
+  /* brand gold */
+  --gold: #ef9a31;
+  --gold-d: #d07e1b;
+  --gold-l: #fcebcf;
+
+  /* price heat-ramp (time-of-use meaning, warm by day) */
+  --cheap: #f6c544;
+  --cheap-l: #fcefc7;
+  --medium: #ec8b2e;
+  --medium-l: #fbe7cf;
+  --peak: #c24b2e;
+  --peak-l: #f6e0d6;
+
+  /* home hero sky (warm, day) */
+  --hero-1: #fdf3e0;
+  --hero-2: #fbe7c4;
+  --hero-3: #f7d9a6;
+
+  /* shadow tint */
+  --shadow-color: rgba(0, 0, 0, 0.05);
+  --shadow-color-strong: rgba(0, 0, 0, 0.08);
+}
+
+html.night {
+  --bg: #14171c;
+  --card: #1e232b;
+  --card-elevated: #262d37;
+  --nav: #1a1f26;
+
+  --ink: #f1efea;
+  --sub: #9ba6b2;
+  --line: #2c333d;
+
+  /* gold pops on dark; deep collapses to the bright gold for contrast */
+  --gold: #f2a63e;
+  --gold-d: #f2a63e;
+  --gold-l: rgba(242, 166, 62, 0.14);
+
+  /* price ramp stays meaningful, slightly brighter peak on dark */
+  --cheap: #f6c544;
+  --cheap-l: rgba(246, 197, 68, 0.16);
+  --medium: #ec8b2e;
+  --medium-l: rgba(236, 139, 46, 0.16);
+  --peak: #d25a3e;
+  --peak-l: rgba(210, 90, 62, 0.18);
+
+  /* home hero sky (cool, night) */
+  --hero-1: #1b2a44;
+  --hero-2: #223354;
+  --hero-3: #2a3e63;
+
+  --shadow-color: rgba(0, 0, 0, 0.4);
+  --shadow-color-strong: rgba(0, 0, 0, 0.5);
+}
+
 @theme inline {
-  /* ---- semantic colors ---- */
-  --color-green: #4e8c57;
-  --color-green-light: #e4f0e6;
-  --color-green-deep: #3c6e44;
+  /* surfaces */
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-card-elevated: var(--card-elevated);
+  --color-nav: var(--nav);
 
-  --color-amber: #c88a22;
-  --color-amber-light: #f6ecd6;
+  /* text + lines */
+  --color-ink: var(--ink);
+  --color-sub: var(--sub);
+  --color-line: var(--line);
 
-  --color-red: #c2544b;
-  --color-red-light: #f5e1de;
+  /* brand gold */
+  --color-gold: var(--gold);
+  --color-gold-deep: var(--gold-d);
+  --color-gold-tint: var(--gold-l);
 
-  --color-ink: #23272b; /* primary text */
-  --color-sub: #7c858c; /* secondary text */
-  --color-line: #e9edea; /* hairlines / borders */
+  /* price ramp */
+  --color-cheap: var(--cheap);
+  --color-cheap-tint: var(--cheap-l);
+  --color-medium: var(--medium);
+  --color-medium-tint: var(--medium-l);
+  --color-peak: var(--peak);
+  --color-peak-tint: var(--peak-l);
 
-  /* ---- surfaces ---- */
-  --color-bg: #eef2ef;
-  --color-card: #ffffff;
+  /* ---- back-compat aliases (old green/amber/red names → warm) ----
+     Lets pre-redesign code keep compiling and look warm during migration.
+     Prefer the semantic names above in new code. */
+  --color-green: var(--gold);
+  --color-green-light: var(--gold-l);
+  --color-green-deep: var(--gold-d);
+  --color-amber: var(--medium);
+  --color-amber-light: var(--medium-l);
+  --color-red: var(--peak);
+  --color-red-light: var(--peak-l);
 
-  /* ---- radii ---- */
-  --radius-sm: 8px;
-  --radius-md: 16px;
-  --radius-lg: 22px;
+  /* ---- radii: sharp 5px everywhere rectangular; pill stays for circles ---- */
+  --radius-sm: 5px;
+  --radius-md: 5px;
+  --radius-lg: 5px;
   --radius-pill: 999px;
 
-  /* ---- soft shadows ---- */
-  --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.06);
-  --shadow-lift: 0 8px 28px rgba(0, 0, 0, 0.1);
+  /* ---- soft shadows (theme-aware tint) ---- */
+  --shadow-soft: 0 4px 18px var(--shadow-color);
+  --shadow-lift: 0 10px 30px var(--shadow-color-strong);
 
   /* ---- type ---- */
   --font-sans:
@@ -53,17 +144,25 @@ body {
 }
 
 body {
-  /* Neutral surface behind the phone frame so it reads as an app on desktop. */
-  background: var(--color-bg);
-  color: var(--color-ink);
+  background: var(--bg);
+  color: var(--ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
-/* Calm, consistent focus ring on interactive elements. */
+/* Smooth 200ms cross-fade of theme colors when toggling day/night. */
+*,
+*::before,
+*::after {
+  transition-property: background-color, border-color, color, box-shadow, fill, stroke;
+  transition-duration: 200ms;
+  transition-timing-function: ease;
+}
+
+/* Calm focus ring in brand gold. */
 :focus-visible {
-  outline: 2px solid var(--color-green);
+  outline: 2px solid var(--gold);
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -77,7 +176,7 @@ body {
   display: none;
 }
 
-/* Respect reduced-motion — kill non-essential animation globally. */
+/* Respect reduced-motion — kill theme transitions + non-essential animation. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

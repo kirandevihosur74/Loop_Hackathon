@@ -4,11 +4,11 @@ import type { DayForecast, GridState } from "@/lib/types";
 import { cn } from "@/lib/cn";
 import { dayOfMonth, usd, weekdayShort } from "./dateUtils";
 
-/** gridState → semantic dot fill (green cheap / amber medium / red peak). */
+/** gridState → price-ramp dot fill (yellow cheap / orange medium / rust peak). */
 const DOT: Record<GridState, string> = {
-  cheap: "bg-green",
-  medium: "bg-amber",
-  expensive: "bg-red",
+  cheap: "bg-cheap",
+  medium: "bg-medium",
+  expensive: "bg-peak",
 };
 
 type DayCellProps = {
@@ -38,16 +38,16 @@ export function DayCell({ forecast, selected, isToday, onSelect, variant }: DayC
         )}${isToday ? ", today" : ""}`}
         onClick={() => onSelect(forecast.date)}
         className={cn(
-          "flex min-h-[76px] w-[52px] shrink-0 flex-col items-center justify-between rounded-md px-1.5 py-2 transition-colors",
+          "flex min-h-[76px] w-[52px] shrink-0 flex-col items-center justify-between rounded-md px-1.5 py-2 shadow-soft transition-colors",
           selected
-            ? "bg-green-light ring-2 ring-green"
-            : "bg-card ring-1 ring-line hover:ring-green",
+            ? "bg-gold-tint ring-2 ring-gold"
+            : "bg-card ring-1 ring-line hover:ring-gold",
         )}
       >
         <span
           className={cn(
             "text-[11px] font-semibold",
-            selected ? "text-green-deep" : "text-sub",
+            selected ? "text-gold-deep" : "text-sub",
           )}
         >
           {weekdayShort(forecast.date)}
@@ -55,7 +55,7 @@ export function DayCell({ forecast, selected, isToday, onSelect, variant }: DayC
         <span
           className={cn(
             "text-lg leading-none font-bold tabular-nums",
-            selected ? "text-green-deep" : "text-ink",
+            selected ? "text-gold-deep" : "text-ink",
           )}
         >
           {dayOfMonth(forecast.date)}
@@ -67,7 +67,7 @@ export function DayCell({ forecast, selected, isToday, onSelect, variant }: DayC
         <span
           className={cn(
             "h-0.5 w-4 rounded-pill",
-            isToday ? "bg-green" : "bg-transparent",
+            isToday ? "bg-gold" : "bg-transparent",
           )}
           aria-hidden="true"
         />
@@ -88,14 +88,14 @@ export function DayCell({ forecast, selected, isToday, onSelect, variant }: DayC
       className={cn(
         "flex min-h-[44px] flex-col items-center justify-center gap-1 rounded-md py-1.5 transition-colors",
         selected
-          ? "bg-green-light ring-2 ring-green"
-          : "bg-card ring-1 ring-line hover:ring-green",
+          ? "bg-gold-tint ring-2 ring-gold"
+          : "bg-card ring-1 ring-line hover:ring-gold",
       )}
     >
       <span
         className={cn(
           "text-sm leading-none font-semibold tabular-nums",
-          selected ? "text-green-deep" : isToday ? "text-green" : "text-ink",
+          selected ? "text-gold-deep" : isToday ? "text-gold" : "text-ink",
         )}
       >
         {dayOfMonth(forecast.date)}

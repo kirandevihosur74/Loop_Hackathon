@@ -72,7 +72,7 @@ export function ApplianceList({
           >
             <Card className="flex items-center gap-3 p-3">
               <span
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-bg text-ink ring-1 ring-line"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-gold-tint text-gold-deep"
                 aria-hidden="true"
               >
                 <TypeIcon type={a.type} className="h-5 w-5" />
@@ -86,7 +86,7 @@ export function ApplianceList({
                 </p>
               </div>
 
-              <span className="shrink-0 text-sm font-semibold text-sub tabular-nums">
+              <span className="shrink-0 text-sm font-bold text-ink tabular-nums">
                 {formatKw(a.kw)}
               </span>
 
@@ -96,7 +96,7 @@ export function ApplianceList({
                 aria-label={`Delete ${a.name}`}
                 className={cn(
                   "flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sub",
-                  "transition-colors hover:text-red active:scale-95",
+                  "transition-colors hover:text-peak active:scale-95",
                 )}
               >
                 <TrashIcon />

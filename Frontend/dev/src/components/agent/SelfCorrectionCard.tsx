@@ -38,11 +38,11 @@ export function SelfCorrectionCard({
       variants={reduce ? noMotion : enter}
       initial="hidden"
       animate="show"
-      className="rounded-lg bg-amber-light p-4 shadow-soft"
+      className="rounded-md bg-peak-tint p-4 shadow-soft"
       role="status"
       aria-live="polite"
     >
-      <div className="flex items-center gap-2 text-amber">
+      <div className="flex items-center gap-2 text-peak">
         <span aria-hidden className="text-lg leading-none">
           ↺
         </span>

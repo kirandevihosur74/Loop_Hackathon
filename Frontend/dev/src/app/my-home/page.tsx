@@ -5,10 +5,14 @@ import { Pill, SectionHeader } from "@/components/ui";
 import { Screen } from "@/components/layout/Screen";
 import { getAppliances, deleteAppliance } from "@/lib/data";
 import type { Appliance, ApplianceType } from "@/lib/types";
-import { ScanButton } from "@/components/myhome/ScanButton";
+import { ScanButton, ScanSweep, useScan } from "@/components/myhome/ScanButton";
 import { ApplianceList } from "@/components/myhome/ApplianceList";
 import { AddApplianceForm } from "@/components/myhome/AddApplianceForm";
-import { ImportBillCard } from "@/components/myhome/ImportBillCard";
+import {
+  ImportBillButton,
+  ImportBillSummary,
+  useBillImport,
+} from "@/components/myhome/ImportBillCard";
 
 type Filter = ApplianceType | "all";
 
@@ -36,16 +40,19 @@ export default function MyHomePage() {
     };
   }, []);
 
+  function prepend(a: Appliance) {
+    // New scans / manual adds land at the top so the enter animation is seen.
+    setAppliances((prev) => (prev ? [a, ...prev] : [a]));
+  }
+
+  const scan = useScan(prepend);
+  const bill = useBillImport();
+
   const filtered = useMemo(() => {
     if (!appliances) return [];
     if (filter === "all") return appliances;
     return appliances.filter((a) => a.type === filter);
   }, [appliances, filter]);
-
-  function prepend(a: Appliance) {
-    // New scans / manual adds land at the top so the enter animation is seen.
-    setAppliances((prev) => (prev ? [a, ...prev] : [a]));
-  }
 
   async function handleDelete(id: string) {
     setAppliances((prev) => (prev ? prev.filter((a) => a.id !== id) : prev)); // optimistic
@@ -67,7 +74,29 @@ export default function MyHomePage() {
         </p>
       </header>
 
-      <ScanButton onScanned={prepend} />
+      {/* Delta 4 — Scan (primary) + Import (secondary) side by side, equal width.
+          Stacks to full-width on very small screens. Panels render below the row. */}
+      <div className="flex flex-wrap gap-2 max-[340px]:flex-col">
+        <ScanButton
+          scanning={scan.scanning}
+          onScan={scan.scan}
+          className="flex-1 min-w-[140px]"
+        />
+        <ImportBillButton
+          inputRef={bill.inputRef}
+          inputId={bill.inputId}
+          phase={bill.phase}
+          onOpen={bill.open}
+          handleFile={bill.handleFile}
+          className="flex-1 min-w-[140px]"
+        />
+      </div>
+      <p className="mt-2 text-xs text-sub">
+        The agent reads your bill to learn your habits and plan around your rate plan.
+      </p>
+
+      <ScanSweep scanning={scan.scanning} />
+      <ImportBillSummary inputId={bill.inputId} phase={bill.phase} summary={bill.summary} />
 
       <div className="mt-5">
         <SectionHeader title="Your appliances" />
@@ -97,10 +126,6 @@ export default function MyHomePage() {
       <div className="mt-4">
         <AddApplianceForm onAdded={prepend} />
       </div>
-
-      <div className="mt-8">
-        <ImportBillCard />
-      </div>
     </Screen>
   );
 }
@@ -109,7 +134,7 @@ function ApplianceListSkeleton() {
   return (
     <div className="flex flex-col gap-2" aria-hidden="true">
       {[0, 1, 2, 3].map((i) => (
-        <div key={i} className="h-[68px] animate-pulse rounded-lg bg-card shadow-soft" />
+        <div key={i} className="h-[68px] animate-pulse rounded-md bg-card shadow-soft" />
       ))}
     </div>
   );

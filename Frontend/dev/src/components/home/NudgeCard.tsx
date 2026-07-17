@@ -33,8 +33,8 @@ export function NudgeCard({ nudge }: { nudge: Nudge }) {
   }
 
   const tone = autoActed
-    ? "bg-green-light ring-green/20"
-    : "bg-bg ring-line";
+    ? "bg-gold-tint ring-gold/20"
+    : "bg-gold-tint ring-gold/15";
 
   return (
     <Card className={cn("relative overflow-hidden ring-1", tone)}>
@@ -43,7 +43,7 @@ export function NudgeCard({ nudge }: { nudge: Nudge }) {
         {showPop && nudge.credits ? (
           <motion.div
             key="pop"
-            className="pointer-events-none absolute right-4 top-4 rounded-pill bg-green px-2.5 py-1 text-xs font-bold text-white shadow-soft"
+            className="pointer-events-none absolute right-4 top-4 rounded-md bg-gold px-2.5 py-1 text-xs font-bold text-white shadow-soft"
             initial={reduced ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
             animate={reduced ? { opacity: 1, y: 0 } : { opacity: 1, y: -6 }}
             exit={{ opacity: 0 }}
@@ -72,7 +72,7 @@ export function NudgeCard({ nudge }: { nudge: Nudge }) {
           {nudge.flow.map((step, i) => (
             <span key={i} className="inline-flex items-center gap-1.5">
               {i > 0 ? <span className="text-sub">→</span> : null}
-              <span className="rounded-pill bg-card px-2 py-0.5 text-xs ring-1 ring-line">
+              <span className="rounded-md bg-card px-2 py-0.5 text-xs ring-1 ring-line">
                 <span className="text-sub">{step.label} </span>
                 <span className="font-semibold text-ink">{step.value}</span>
               </span>
@@ -83,7 +83,7 @@ export function NudgeCard({ nudge }: { nudge: Nudge }) {
 
       {/* Savings + credits */}
       {(nudge.savingsUsd !== undefined || nudge.credits !== undefined) && (
-        <p className="mt-3 text-sm font-semibold text-green-deep">
+        <p className="mt-3 text-sm font-semibold text-gold-deep">
           {nudge.savingsUsd !== undefined ? `Saves $${nudge.savingsUsd.toFixed(2)}` : ""}
           {nudge.savingsUsd !== undefined && nudge.credits !== undefined ? " · " : ""}
           {nudge.credits !== undefined ? `+${nudge.credits} credits` : ""}
@@ -99,7 +99,7 @@ export function NudgeCard({ nudge }: { nudge: Nudge }) {
             </p>
           ) : (
             <div className="flex items-center justify-between gap-3">
-              <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-green-deep">
+              <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-gold-deep">
                 <CheckIcon /> Handled
               </span>
               <GhostButton className="min-w-[96px]" onClick={() => setActed("reverted")}>
@@ -108,7 +108,7 @@ export function NudgeCard({ nudge }: { nudge: Nudge }) {
             </div>
           )
         ) : acted === "done" ? (
-          <p className="inline-flex items-center gap-1.5 text-sm font-semibold text-green-deep" role="status">
+          <p className="inline-flex items-center gap-1.5 text-sm font-semibold text-gold-deep" role="status">
             <CheckIcon /> Done
             {nudge.savingsUsd !== undefined ? ` — saved $${nudge.savingsUsd.toFixed(2)}` : ""}
           </p>

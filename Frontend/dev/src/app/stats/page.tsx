@@ -104,7 +104,7 @@ export default function StatsPage() {
             <Card>
               <SectionHeader
                 title="When you used it"
-                subtitle="Taller bars in green hours means cheaper, cleaner power."
+                subtitle="Taller bars in yellow hours mean cheaper, cleaner power."
               />
               <HourlyBars hourly={stats.hourly} />
             </Card>

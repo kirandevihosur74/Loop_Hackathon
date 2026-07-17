@@ -4,9 +4,9 @@ import { cn } from "@/lib/cn";
 
 /** Confidence is ALWAYS a Low / Med / High band — never a fake percentage. */
 const styles: Record<Confidence, string> = {
-  low: "bg-red-light text-red",
-  med: "bg-amber-light text-amber",
-  high: "bg-green-light text-green-deep",
+  low: "bg-peak-tint text-peak",
+  med: "bg-medium-tint text-medium",
+  high: "bg-gold-tint text-gold-deep",
 };
 
 const bars: Record<Confidence, number> = { low: 1, med: 2, high: 3 };
@@ -21,7 +21,7 @@ export function ConfidenceBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-pill px-2.5 py-1 text-xs font-semibold",
+        "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold",
         styles[level],
         className,
       )}

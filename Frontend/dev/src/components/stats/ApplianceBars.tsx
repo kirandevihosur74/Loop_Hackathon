@@ -2,7 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import type { ApplianceUsage } from "@/lib/types";
-import { color } from "@/lib/tokens";
+import { cssVar } from "@/lib/tokens";
 import { ease } from "@/lib/motion";
 
 /**
@@ -27,14 +27,14 @@ export function ApplianceBars({ items }: { items: ApplianceUsage[] }) {
               </span>
             </div>
             <div
-              className="mt-1 h-2.5 w-full overflow-hidden rounded-pill"
-              style={{ backgroundColor: color.greenLight }}
+              className="mt-1 h-2.5 w-full overflow-hidden rounded-sm"
+              style={{ backgroundColor: cssVar.goldTint }}
               role="img"
               aria-label={`${a.name}: ${a.kwh} kilowatt hours, costing $${a.costUsd.toFixed(2)}.`}
             >
               <motion.div
-                className="h-full rounded-pill"
-                style={{ backgroundColor: color.green }}
+                className="h-full rounded-sm"
+                style={{ backgroundColor: cssVar.gold }}
                 initial={reduce ? { width: `${pct}%` } : { width: 0 }}
                 animate={{ width: `${pct}%` }}
                 transition={reduce ? { duration: 0 } : { duration: 0.7, ease }}

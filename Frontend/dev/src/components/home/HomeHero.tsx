@@ -1,191 +1,271 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
+import { useMemo } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { GridState } from "@/lib/types";
-import { GridStateBadge } from "@/components/ui";
-import { cn } from "@/lib/cn";
+import { GridStateBadge, ThemeToggle } from "@/components/ui";
+import { useTheme } from "@/lib/useTheme";
+import { cssVar } from "@/lib/tokens";
+import { ease } from "@/lib/motion";
+
+const CURVE_W = 320;
+const CURVE_H = 96;
+const PAD_TOP = 14;
+const PAD_BOTTOM = 14;
+
+/** A day-long price-forecast curve (mocked locally — no data-layer change). */
+const FORECAST: { h: number; c: number }[] = [
+  { h: 0, c: 14 },
+  { h: 2, c: 12 },
+  { h: 4, c: 11 },
+  { h: 6, c: 13 },
+  { h: 8, c: 16 },
+  { h: 10, c: 10 },
+  { h: 12, c: 9 },
+  { h: 14, c: 15 },
+  { h: 16, c: 24 },
+  { h: 18, c: 34 },
+  { h: 20, c: 28 },
+  { h: 22, c: 18 },
+  { h: 24, c: 14 },
+];
 
 /**
- * Set to true once /public/home-day.png & /public/home-night.png exist.
- * Until then the CSS sky gradient below IS the hero, and the <Image> slots
- * are wired up but never render (so they can't 404).
- */
-const HAS_HERO_IMAGES = false;
-
-type Mode = "day" | "night";
-
-/**
- * Full-bleed hero with a calm address header + a day/night sun/moon toggle.
- * The hero cross-fades between a warm day sky and a deep-blue night sky — the
- * ONE sanctioned exception to the color vocabulary, kept entirely inside here.
- * A small GridStateBadge overlays the current grid price.
+ * Warm price-"weather" hero. A calm address header (with the app-wide ThemeToggle)
+ * sits above a full-bleed panel on the --hero-1/2/3 sky gradient (peach by day →
+ * deep blue by night, driven entirely by the theme CSS vars). Inside: today's rate,
+ * a grid-state badge, peak/cheapest chips, a smooth price-forecast curve with a
+ * dashed "now" line, and a sun (day) that cross-fades to a moon (night) via useTheme().
  */
 export function HomeHero({
   grid,
 }: {
   grid: { state: GridState; priceCents: number };
 }) {
-  const [mode, setMode] = useState<Mode>("day");
-  const isDay = mode === "day";
+  const { theme } = useTheme();
+  const reduced = useReducedMotion();
+  const isNight = theme === "night";
+
+  const { linePath, areaPath, nowX, peak, low } = useMemo(() => buildForecast(), []);
 
   return (
     <header>
-      {/* Calm address row + day/night toggle */}
+      {/* Calm address row + app-wide day/night toggle. */}
       <div className="flex items-center justify-between px-4 pt-4">
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-ink">123 Maple St</p>
           <p className="truncate text-xs text-sub">San Jose</p>
         </div>
-        <button
-          type="button"
-          onClick={() => setMode((m) => (m === "day" ? "night" : "day"))}
-          aria-label={isDay ? "Switch to night view" : "Switch to day view"}
-          aria-pressed={!isDay}
-          className="inline-flex h-11 w-11 items-center justify-center rounded-pill bg-card text-ink shadow-soft ring-1 ring-line transition-[transform,color] active:scale-[0.96] hover:text-sub"
-        >
-          {isDay ? <MoonIcon /> : <SunIcon />}
-        </button>
+        <ThemeToggle className="h-11 w-11 ring-1 ring-line" />
       </div>
 
-      {/* Full-bleed sky hero — rounded BOTTOM, edge-to-edge in the phone column. */}
-      <div className="relative mt-3 h-56 overflow-hidden rounded-b-lg">
-        {/* Day sky layer */}
-        <div
-          className={cn(
-            "absolute inset-0 transition-opacity duration-700 ease-out",
-            isDay ? "opacity-100" : "opacity-0",
-          )}
-          style={{
-            background:
-              "linear-gradient(180deg, #7FB6E6 0%, #A9D0EC 38%, #E7D9B4 78%, #F6E2B8 100%)",
-          }}
-          aria-hidden
-        >
-          <Celestial kind="sun" />
+      {/* Full-bleed sky hero — warm→cool via --hero vars, rounded BOTTOM (5px). */}
+      <div
+        className="relative mt-3 overflow-hidden rounded-b-lg px-4 pb-3 pt-4 shadow-soft"
+        style={{
+          background:
+            "linear-gradient(180deg, var(--hero-1), var(--hero-2) 55%, var(--hero-3))",
+        }}
+      >
+        {/* Sun (day) ↔ moon (night) — cross-fades with the theme. */}
+        <div className="pointer-events-none absolute right-5 top-4 h-14 w-14">
+          <AnimatePresence initial={false} mode="sync">
+            <motion.div
+              key={theme}
+              className="absolute inset-0"
+              initial={reduced ? false : { opacity: 0, scale: 0.85 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.85 }}
+              transition={{ duration: 0.6, ease }}
+            >
+              <Celestial kind={isNight ? "moon" : "sun"} />
+            </motion.div>
+          </AnimatePresence>
         </div>
 
-        {/* Night sky layer */}
-        <div
-          className={cn(
-            "absolute inset-0 transition-opacity duration-700 ease-out",
-            isDay ? "opacity-0" : "opacity-100",
-          )}
-          style={{
-            background:
-              "linear-gradient(180deg, #0B1B36 0%, #142A4E 55%, #21375F 100%)",
-          }}
-          aria-hidden
-        >
-          <Stars />
-          <Celestial kind="moon" />
-        </div>
-
-        {/* TODO: drop in home-day.png / home-night.png — wired up, disabled until they exist. */}
-        {HAS_HERO_IMAGES && (
-          <Image
-            src={isDay ? "/home-day.png" : "/home-night.png"}
-            alt=""
-            fill
-            sizes="430px"
-            style={{ objectFit: "cover" }}
-            className="pointer-events-none select-none"
-          />
-        )}
-
-        {/* Grid state overlay */}
-        <div className="absolute left-4 top-4">
+        {/* Rate + grid state */}
+        <div className="relative flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-gold-deep">
+              Today&apos;s electricity
+            </p>
+            <p className="mt-1 flex items-baseline gap-1">
+              <span
+                className="font-bold tabular-nums leading-none text-ink"
+                style={{ fontSize: 42 }}
+              >
+                {grid.priceCents}¢
+              </span>
+              <span className="text-sm font-medium text-sub">/kWh now</span>
+            </p>
+          </div>
           <GridStateBadge state={grid.state} priceCents={grid.priceCents} />
+        </div>
+
+        {/* Peak / cheapest chips */}
+        <div className="relative mt-3 flex flex-wrap gap-2">
+          <Chip>▲ Peak 5–8pm · {peak.c}¢</Chip>
+          <Chip>▼ Cheapest 12pm · {low.c}¢</Chip>
+        </div>
+
+        {/* Price-forecast curve for the day */}
+        <div className="relative mt-3">
+          <svg
+            role="img"
+            aria-label="Today's electricity price forecast"
+            viewBox={`0 0 ${CURVE_W} ${CURVE_H}`}
+            className="h-auto w-full"
+            preserveAspectRatio="none"
+          >
+            <defs>
+              <linearGradient id="hero-price-line" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor={cssVar.cheap} />
+                <stop offset="55%" stopColor={cssVar.gold} />
+                <stop offset="100%" stopColor={cssVar.peak} />
+              </linearGradient>
+              <linearGradient id="hero-price-area" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={cssVar.gold} stopOpacity={0.26} />
+                <stop offset="100%" stopColor={cssVar.gold} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+
+            <path d={areaPath} fill="url(#hero-price-area)" />
+            <path
+              d={linePath}
+              fill="none"
+              stroke="url(#hero-price-line)"
+              strokeWidth={3}
+              strokeLinejoin="round"
+              strokeLinecap="round"
+              vectorEffect="non-scaling-stroke"
+            />
+
+            {/* Dashed "now" vertical */}
+            <line
+              x1={nowX}
+              y1={PAD_TOP - 6}
+              x2={nowX}
+              y2={CURVE_H}
+              stroke={cssVar.sub}
+              strokeWidth={1}
+              strokeDasharray="3 3"
+              vectorEffect="non-scaling-stroke"
+              opacity={0.7}
+            />
+
+            {/* Peak dot */}
+            <circle cx={peak.x} cy={peak.y} r={3.5} fill={cssVar.peak} />
+            {/* Cheapest dot */}
+            <circle cx={low.x} cy={low.y} r={3.5} fill={cssVar.cheap} />
+          </svg>
+
+          {/* Peak / low value labels, positioned over the curve */}
+          <span
+            className="absolute -translate-x-1/2 -translate-y-full text-[10px] font-bold tabular-nums text-peak"
+            style={{ left: `${(peak.x / CURVE_W) * 100}%`, top: `${(peak.y / CURVE_H) * 100}%` }}
+          >
+            {peak.c}¢
+          </span>
+          <span
+            className="absolute -translate-x-1/2 translate-y-1 text-[10px] font-bold tabular-nums text-gold-deep"
+            style={{ left: `${(low.x / CURVE_W) * 100}%`, top: `${(low.y / CURVE_H) * 100}%` }}
+          >
+            {low.c}¢
+          </span>
+
+          {/* Axis */}
+          <div className="mt-1 flex justify-between text-[10px] font-medium tabular-nums text-sub">
+            <span>12AM</span>
+            <span>6AM</span>
+            <span>12PM</span>
+            <span>6PM</span>
+            <span>12AM</span>
+          </div>
         </div>
       </div>
     </header>
   );
 }
 
-/** Warm sun / pale moon disc — decorative, sky-exception colors only. */
+function Chip({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-center rounded-md bg-card/75 px-2.5 py-1 text-xs font-semibold text-gold-deep shadow-soft ring-1 ring-line/50 backdrop-blur-sm">
+      {children}
+    </span>
+  );
+}
+
+/** Build the smooth forecast path + peak/low/now markers from FORECAST. */
+function buildForecast() {
+  const cents = FORECAST.map((p) => p.c);
+  const min = Math.min(...cents);
+  const max = Math.max(...cents);
+  const span = Math.max(1, max - min);
+  const usableH = CURVE_H - PAD_TOP - PAD_BOTTOM;
+
+  const x = (h: number) => (h / 24) * CURVE_W;
+  const y = (c: number) => PAD_TOP + (1 - (c - min) / span) * usableH;
+
+  const coords = FORECAST.map((p) => ({ x: x(p.h), y: y(p.c), c: p.c }));
+
+  const linePath = smoothPath(coords);
+  const areaPath =
+    `M${coords[0].x.toFixed(2)},${CURVE_H} L${coords[0].x.toFixed(2)},${coords[0].y.toFixed(2)} ` +
+    smoothPath(coords).replace(/^M[^ ]+ /, "") +
+    ` L${coords[coords.length - 1].x.toFixed(2)},${CURVE_H} Z`;
+
+  const peakIdx = cents.indexOf(max);
+  const lowIdx = cents.indexOf(min);
+
+  const now = new Date();
+  const nowHour = now.getHours() + now.getMinutes() / 60;
+  const nowX = x(nowHour);
+
+  return {
+    linePath,
+    areaPath,
+    nowX,
+    peak: coords[peakIdx],
+    low: coords[lowIdx],
+  };
+}
+
+/** Catmull-Rom → cubic bezier for a smooth curve through the points. */
+function smoothPath(pts: { x: number; y: number }[]): string {
+  if (pts.length < 2) return "";
+  let d = `M${pts[0].x.toFixed(2)},${pts[0].y.toFixed(2)}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] ?? pts[i];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[i + 2] ?? p2;
+    const c1x = p1.x + (p2.x - p0.x) / 6;
+    const c1y = p1.y + (p2.y - p0.y) / 6;
+    const c2x = p2.x - (p3.x - p1.x) / 6;
+    const c2y = p2.y - (p3.y - p1.y) / 6;
+    d += ` C${c1x.toFixed(2)},${c1y.toFixed(2)} ${c2x.toFixed(2)},${c2y.toFixed(2)} ${p2.x.toFixed(2)},${p2.y.toFixed(2)}`;
+  }
+  return d;
+}
+
+/**
+ * Warm sun / pale moon disc — decorative celestial glyph. Its own radial-gradient
+ * hexes are the ONE sanctioned color exception, kept entirely inside HomeHero.
+ */
 function Celestial({ kind }: { kind: "sun" | "moon" }) {
   const isSun = kind === "sun";
   return (
     <div
-      className="absolute right-8 top-8 h-16 w-16 rounded-pill"
+      className="h-full w-full rounded-full"
       style={{
         background: isSun
           ? "radial-gradient(circle at 50% 45%, #FFF1C4 0%, #FFD873 45%, #FBB944 100%)"
           : "radial-gradient(circle at 42% 40%, #F3F6FB 0%, #D7DFEC 60%, #B9C4D6 100%)",
         boxShadow: isSun
-          ? "0 0 40px 14px rgba(255, 210, 110, 0.55)"
-          : "0 0 28px 8px rgba(210, 224, 245, 0.35)",
+          ? "0 0 40px 14px rgba(255, 210, 110, 0.5)"
+          : "0 0 26px 8px rgba(210, 224, 245, 0.32)",
       }}
       aria-hidden
     />
-  );
-}
-
-/** A few faint night stars. */
-function Stars() {
-  const stars = [
-    { top: "18%", left: "16%", s: 2 },
-    { top: "30%", left: "62%", s: 1.5 },
-    { top: "22%", left: "78%", s: 2.5 },
-    { top: "48%", left: "28%", s: 1.5 },
-    { top: "40%", left: "46%", s: 2 },
-    { top: "60%", left: "70%", s: 1.5 },
-  ];
-  return (
-    <>
-      {stars.map((st, i) => (
-        <span
-          key={i}
-          className="absolute rounded-pill"
-          style={{
-            top: st.top,
-            left: st.left,
-            width: st.s,
-            height: st.s,
-            background: "#F3F6FB",
-            opacity: 0.85,
-          }}
-          aria-hidden
-        />
-      ))}
-    </>
-  );
-}
-
-function SunIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <circle cx="12" cy="12" r="4" fill="currentColor" />
-      {Array.from({ length: 8 }).map((_, i) => {
-        const a = (i * Math.PI) / 4;
-        const x1 = 12 + Math.cos(a) * 7;
-        const y1 = 12 + Math.sin(a) * 7;
-        const x2 = 12 + Math.cos(a) * 9.5;
-        const y2 = 12 + Math.sin(a) * 9.5;
-        return (
-          <line
-            key={i}
-            x1={x1}
-            y1={y1}
-            x2={x2}
-            y2={y2}
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-          />
-        );
-      })}
-    </svg>
-  );
-}
-
-function MoonIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"
-        fill="currentColor"
-      />
-    </svg>
   );
 }

@@ -79,7 +79,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Primary"
-      className="fixed bottom-0 left-1/2 z-40 w-full max-w-[430px] -translate-x-1/2 border-t border-line bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
+      className="fixed bottom-0 left-1/2 z-40 w-full max-w-[430px] -translate-x-1/2 border-t border-line bg-nav/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
     >
       <ul className="flex items-stretch justify-around px-2 pt-1.5">
         {TABS.map(({ href, label, Icon }) => {
@@ -91,7 +91,7 @@ export function BottomNav() {
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-md py-1 text-[10px] font-semibold transition-colors",
-                  active ? "text-green" : "text-sub hover:text-ink",
+                  active ? "text-gold-deep" : "text-sub hover:text-ink",
                 )}
               >
                 <Icon aria-hidden />

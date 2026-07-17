@@ -2,14 +2,18 @@
 
 import { useId, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Card, GhostButton, SectionHeader } from "@/components/ui";
+import { Card, GhostButton } from "@/components/ui";
 import { importBill } from "@/lib/data";
 import { ease } from "@/lib/motion";
 
 type Phase = "idle" | "reading" | "done";
 
-export function ImportBillCard() {
-  const reduce = useReducedMotion();
+/**
+ * Bill-import behavior. State lives in this hook so the trigger button can sit
+ * in the shared action row (half width) while the "reading" / "learned" summary
+ * cards (<ImportBillSummary/>) render full-width below the row.
+ */
+export function useBillImport() {
   const inputRef = useRef<HTMLInputElement>(null);
   const inputId = useId();
   const [phase, setPhase] = useState<Phase>("idle");
@@ -30,13 +34,32 @@ export function ImportBillCard() {
     }
   }
 
-  return (
-    <div>
-      <SectionHeader
-        title="Import your electricity bill"
-        subtitle="The agent reads your bill to learn your habits and plan around your rate plan."
-      />
+  function open() {
+    inputRef.current?.click();
+  }
 
+  return { inputRef, inputId, phase, summary, handleFile, open };
+}
+
+/** The secondary (tinted) trigger + hidden file input — lives in the action row. */
+export function ImportBillButton({
+  inputRef,
+  inputId,
+  phase,
+  onOpen,
+  handleFile,
+  className,
+}: {
+  inputRef: React.RefObject<HTMLInputElement | null>;
+  inputId: string;
+  phase: Phase;
+  onOpen: () => void;
+  handleFile: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  className?: string;
+}) {
+  return (
+    <>
+      {/* Absolutely-positioned (sr-only), so it is not a flex item in the row. */}
       <input
         ref={inputRef}
         id={inputId}
@@ -48,60 +71,79 @@ export function ImportBillCard() {
       />
 
       <GhostButton
-        onClick={() => inputRef.current?.click()}
+        onClick={onOpen}
         disabled={phase === "reading"}
         aria-busy={phase === "reading"}
         aria-controls={phase === "done" ? `${inputId}-summary` : undefined}
-        className="w-full"
+        className={className}
       >
         <BillIcon />
-        {phase === "reading" ? "Reading your bill…" : phase === "done" ? "Import another bill" : "Import electricity bill"}
+        {phase === "reading"
+          ? "Reading bill…"
+          : phase === "done"
+            ? "Import another"
+            : "Import bill"}
       </GhostButton>
+    </>
+  );
+}
 
-      <AnimatePresence mode="wait">
-        {phase === "reading" && (
-          <motion.div
-            key="reading"
-            initial={reduce ? { opacity: 1 } : { opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.28, ease }}
-          >
-            <Card className="mt-3" aria-live="polite">
-              <div className="flex flex-col gap-2">
-                <p className="text-sm text-sub">Reading your bill…</p>
-                <div className="h-3 w-3/4 animate-pulse rounded-pill bg-bg" />
-                <div className="h-3 w-full animate-pulse rounded-pill bg-bg" />
-                <div className="h-3 w-2/3 animate-pulse rounded-pill bg-bg" />
-              </div>
-            </Card>
-          </motion.div>
-        )}
+/** The "reading" skeleton and "learned from your bill" summary — full width below the row. */
+export function ImportBillSummary({
+  inputId,
+  phase,
+  summary,
+}: {
+  inputId: string;
+  phase: Phase;
+  summary: string;
+}) {
+  const reduce = useReducedMotion();
 
-        {phase === "done" && (
-          <motion.div
-            key="done"
-            id={`${inputId}-summary`}
-            initial={reduce ? { opacity: 1 } : { opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.32, ease }}
-          >
-            <Card className="mt-3 bg-green-light" aria-live="polite">
-              <div className="flex items-start gap-2.5">
-                <span className="mt-0.5 shrink-0 text-green-deep" aria-hidden="true">
-                  <CheckIcon />
-                </span>
-                <div>
-                  <p className="text-sm font-semibold text-green-deep">Learned from your bill</p>
-                  <p className="mt-1 text-sm text-ink">{summary}</p>
-                </div>
+  return (
+    <AnimatePresence mode="wait">
+      {phase === "reading" && (
+        <motion.div
+          key="reading"
+          initial={reduce ? { opacity: 1 } : { opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.28, ease }}
+        >
+          <Card className="mt-3" aria-live="polite">
+            <div className="flex flex-col gap-2">
+              <p className="text-sm text-sub">Reading your bill…</p>
+              <div className="h-3 w-3/4 animate-pulse rounded-md bg-bg" />
+              <div className="h-3 w-full animate-pulse rounded-md bg-bg" />
+              <div className="h-3 w-2/3 animate-pulse rounded-md bg-bg" />
+            </div>
+          </Card>
+        </motion.div>
+      )}
+
+      {phase === "done" && (
+        <motion.div
+          key="done"
+          id={`${inputId}-summary`}
+          initial={reduce ? { opacity: 1 } : { opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.32, ease }}
+        >
+          <Card className="mt-3 bg-gold-tint" aria-live="polite">
+            <div className="flex items-start gap-2.5">
+              <span className="mt-0.5 shrink-0 text-gold-deep" aria-hidden="true">
+                <CheckIcon />
+              </span>
+              <div>
+                <p className="text-sm font-semibold text-gold-deep">Learned from your bill</p>
+                <p className="mt-1 text-sm text-ink">{summary}</p>
               </div>
-            </Card>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+            </div>
+          </Card>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 

@@ -1,38 +1,71 @@
 /**
  * Raw token values for contexts that cannot read Tailwind classes —
  * hand-rolled SVG charts, inline `fill`/`stroke`, canvas, framer-motion colors.
- * These MUST stay in sync with the @theme block in src/app/globals.css.
+ * These are the DAY values and MUST stay in sync with the @theme block in
+ * src/app/globals.css. For theme-aware SVG, prefer `var(--gold)`, `var(--peak)`,
+ * etc. directly in `fill`/`stroke`; use these constants when a literal is needed.
  */
 
 import type { GridState, Confidence } from "@/lib/types";
 
 export const color = {
-  green: "#4E8C57",
-  greenLight: "#E4F0E6",
-  greenDeep: "#3C6E44",
-  amber: "#C88A22",
-  amberLight: "#F6ECD6",
-  red: "#C2544B",
-  redLight: "#F5E1DE",
-  ink: "#23272B",
-  sub: "#7C858C",
-  line: "#E9EDEA",
-  bg: "#EEF2EF",
+  /* brand gold */
+  gold: "#EF9A31",
+  goldDeep: "#D07E1B",
+  goldTint: "#FCEBCF",
+
+  /* price ramp */
+  cheap: "#F6C544",
+  cheapTint: "#FCEFC7",
+  medium: "#EC8B2E",
+  mediumTint: "#FBE7CF",
+  peak: "#C24B2E",
+  peakTint: "#F6E0D6",
+
+  /* neutrals */
+  ink: "#2A2620",
+  sub: "#8C8375",
+  line: "#EFE7DA",
+  bg: "#FBF7F0",
   card: "#FFFFFF",
+
+  /* back-compat aliases (old green/amber/red names → warm). Prefer the names
+     above in new code; these keep pre-redesign chart code compiling + warm. */
+  green: "#EF9A31",
+  greenLight: "#FCEBCF",
+  greenDeep: "#D07E1B",
+  amber: "#EC8B2E",
+  amberLight: "#FBE7CF",
+  red: "#C24B2E",
+  redLight: "#F6E0D6",
+} as const;
+
+/** CSS variable references — use these in SVG fill/stroke to stay theme-aware. */
+export const cssVar = {
+  gold: "var(--gold)",
+  goldDeep: "var(--gold-d)",
+  goldTint: "var(--gold-l)",
+  cheap: "var(--cheap)",
+  medium: "var(--medium)",
+  peak: "var(--peak)",
+  ink: "var(--ink)",
+  sub: "var(--sub)",
+  line: "var(--line)",
+  card: "var(--card)",
 } as const;
 
 export const radius = {
-  sm: 8,
-  md: 16,
-  lg: 22,
+  sm: 5,
+  md: 5,
+  lg: 5,
   pill: 999,
 } as const;
 
-/** Grid price state → its semantic color set. Green cheap, amber medium, red expensive. */
+/** Grid price state → its color set (price heat-ramp). Yellow cheap → orange → rust peak. */
 export const gridColor: Record<GridState, { base: string; light: string; deep: string }> = {
-  cheap: { base: color.green, light: color.greenLight, deep: color.greenDeep },
-  medium: { base: color.amber, light: color.amberLight, deep: color.amber },
-  expensive: { base: color.red, light: color.redLight, deep: color.red },
+  cheap: { base: color.cheap, light: color.cheapTint, deep: color.goldDeep },
+  medium: { base: color.medium, light: color.mediumTint, deep: color.medium },
+  expensive: { base: color.peak, light: color.peakTint, deep: color.peak },
 };
 
 /** Human labels for grid state. */

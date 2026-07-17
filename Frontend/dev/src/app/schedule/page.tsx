@@ -62,7 +62,7 @@ export default function SchedulePage() {
       <SectionHeader
         className="mt-4"
         title={view === "week" ? "Your week ahead" : `${monthLabel ?? "This month"} at a glance`}
-        subtitle="Dots show grid price: green cheap · amber medium · red peak"
+        subtitle="Dots show grid price: yellow cheap · orange medium · rust peak"
         trailing={
           <div className="flex gap-1.5" role="group" aria-label="Calendar range">
             <Pill active={view === "week"} onClick={() => setView("week")}>
@@ -76,7 +76,7 @@ export default function SchedulePage() {
       />
 
       {calendarLoading || !selected || !today ? (
-        <div className="h-24 animate-pulse rounded-lg bg-card" />
+        <div className="h-24 animate-pulse rounded-md bg-card" />
       ) : view === "week" ? (
         <WeekStrip days={week!} selected={selected} today={today} onSelect={setSelected} />
       ) : (
@@ -88,9 +88,9 @@ export default function SchedulePage() {
           <AdviceChecklist date={selected} today={today} />
         ) : (
           <div className="space-y-2">
-            <div className="mb-3 h-6 w-52 animate-pulse rounded-pill bg-card" />
+            <div className="mb-3 h-6 w-52 animate-pulse rounded-md bg-card" />
             {[0, 1, 2].map((i) => (
-              <div key={i} className="h-14 animate-pulse rounded-lg bg-card" />
+              <div key={i} className="h-14 animate-pulse rounded-md bg-card" />
             ))}
           </div>
         )}

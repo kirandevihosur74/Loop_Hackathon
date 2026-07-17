@@ -30,7 +30,7 @@ type AdviceChecklistProps = {
 
 /**
  * The emotional core: the selected day's plan. Checkable rows with a
- * satisfying green check, struck/dimmed done text, staggered reveal, and a
+ * satisfying gold check, struck/dimmed done text, staggered reveal, and a
  * per-day potential-savings tally. Optimistic toggle per SWARM_PLAN §4.
  */
 export function AdviceChecklist({ date, today }: AdviceChecklistProps) {
@@ -66,10 +66,10 @@ export function AdviceChecklist({ date, today }: AdviceChecklistProps) {
   if (!items) {
     return (
       <div>
-        <div className="mb-3 h-6 w-52 animate-pulse rounded-pill bg-card" />
+        <div className="mb-3 h-6 w-52 animate-pulse rounded-md bg-card" />
         <div className="space-y-2">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-14 animate-pulse rounded-lg bg-card" />
+            <div key={i} className="h-14 animate-pulse rounded-md bg-card" />
           ))}
         </div>
       </div>
@@ -91,11 +91,11 @@ export function AdviceChecklist({ date, today }: AdviceChecklistProps) {
         {totalPotential > 0 ? (
           <>
             Save up to{" "}
-            <span className="font-semibold text-green">{usd(totalPotential)}</span> today
+            <span className="font-bold text-gold-deep">{usd(totalPotential)}</span> today
             {captured > 0 && (
               <>
                 {" · "}
-                <span className="font-semibold text-green-deep">{usd(captured)}</span> captured
+                <span className="font-bold text-gold-deep">{usd(captured)}</span> captured
               </>
             )}
           </>
@@ -124,8 +124,8 @@ export function AdviceChecklist({ date, today }: AdviceChecklistProps) {
                 aria-checked={item.done}
                 onClick={() => onToggle(item.id)}
                 className={cn(
-                  "flex min-h-[56px] w-full items-center gap-3 rounded-lg p-3.5 text-left shadow-soft transition-colors",
-                  item.done ? "bg-green-light" : "bg-card ring-1 ring-line",
+                  "flex min-h-[56px] w-full items-center gap-3 rounded-md p-3.5 text-left shadow-soft transition-colors",
+                  item.done ? "bg-gold-tint" : "bg-card ring-1 ring-line",
                 )}
               >
                 <motion.span
@@ -137,7 +137,7 @@ export function AdviceChecklist({ date, today }: AdviceChecklistProps) {
                   className={cn(
                     "flex h-6 w-6 shrink-0 items-center justify-center rounded-pill border-2 transition-colors",
                     item.done
-                      ? "border-green bg-green text-white"
+                      ? "border-gold bg-gold text-white"
                       : "border-line bg-card text-transparent",
                   )}
                 >
@@ -156,8 +156,8 @@ export function AdviceChecklist({ date, today }: AdviceChecklistProps) {
                 {item.savingsUsd != null && (
                   <span
                     className={cn(
-                      "shrink-0 text-sm font-semibold tabular-nums",
-                      item.done ? "text-green-deep" : "text-green",
+                      "shrink-0 text-sm font-bold tabular-nums",
+                      item.done ? "text-gold-deep" : "text-gold-deep",
                     )}
                   >
                     {usd(item.savingsUsd)}
@@ -170,7 +170,7 @@ export function AdviceChecklist({ date, today }: AdviceChecklistProps) {
       )}
 
       {allDone && (
-        <p className="mt-3 text-center text-sm font-semibold text-green-deep">
+        <p className="mt-3 text-center text-sm font-semibold text-gold-deep">
           Plan complete — nice work.
         </p>
       )}

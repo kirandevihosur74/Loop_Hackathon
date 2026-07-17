@@ -15,9 +15,9 @@ export function Pill({ active = false, className, children, ...props }: PillProp
       type="button"
       aria-pressed={active}
       className={cn(
-        "inline-flex min-h-[36px] items-center gap-1.5 rounded-pill px-3.5 py-1.5 text-sm font-semibold whitespace-nowrap transition-colors",
+        "inline-flex min-h-[36px] items-center gap-1.5 rounded-md px-3.5 py-1.5 text-sm font-semibold whitespace-nowrap transition-colors",
         active
-          ? "bg-green text-white shadow-soft"
+          ? "bg-gold text-white shadow-soft"
           : "bg-card text-sub ring-1 ring-line hover:text-ink",
         className,
       )}

@@ -2,7 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import type { SplitUsage } from "@/lib/types";
-import { color } from "@/lib/tokens";
+import { cssVar } from "@/lib/tokens";
 import { ease } from "@/lib/motion";
 
 function MiniRing({
@@ -53,7 +53,7 @@ function MiniRing({
           animate={{ strokeDashoffset: offset }}
           transition={reduce ? { duration: 0 } : { duration: 0.9, ease }}
         />
-        <text x={c} y={c + 5} textAnchor="middle" fontSize="22" fontWeight="700" fill={color.ink}>
+        <text x={c} y={c + 5} textAnchor="middle" fontSize="22" fontWeight="700" fill={cssVar.ink}>
           {pct}%
         </text>
       </svg>
@@ -74,15 +74,15 @@ export function SplitRings({ home, car }: { home: SplitUsage; car: SplitUsage })
         label="Home"
         usage={home}
         fraction={home.kwh / total}
-        stroke={color.green}
-        track={color.greenLight}
+        stroke={cssVar.gold}
+        track={cssVar.goldTint}
       />
       <MiniRing
         label="Car"
         usage={car}
         fraction={car.kwh / total}
-        stroke={color.amber}
-        track={color.amberLight}
+        stroke={cssVar.medium}
+        track="var(--medium-l)"
       />
     </div>
   );

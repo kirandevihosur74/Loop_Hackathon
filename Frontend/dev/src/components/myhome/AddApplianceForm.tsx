@@ -48,7 +48,7 @@ export function AddApplianceForm({ onAdded }: { onAdded: (a: Appliance) => void 
   }
 
   const fieldClass =
-    "min-h-[44px] w-full rounded-md bg-card px-3 text-sm text-ink ring-1 ring-line focus:outline-none focus-visible:ring-2 focus-visible:ring-green";
+    "min-h-[44px] w-full rounded-md bg-card px-3 text-sm text-ink ring-1 ring-line focus:outline-none focus-visible:ring-2 focus-visible:ring-gold";
 
   return (
     <div>
