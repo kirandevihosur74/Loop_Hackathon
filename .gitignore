@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Env / secrets
+.env
+backend/.env
+
+# DB
+*.db
+*.sqlite3
+
+# OS
+.DS_Store
+
+# Editor
+.idea/
+.vscode/

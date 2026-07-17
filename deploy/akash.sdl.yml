@@ -1,0 +1,44 @@
+# Akash SDL manifest — deploy the loop backend to decentralized cloud.
+# Replace the image with your pushed public image, then deploy (see deploy/README.md).
+---
+version: "2.0"
+
+services:
+  web:
+    image: docker.io/YOURUSER/loop-backend:latest   # <-- push your image, then set this
+    env:
+      - USE_MOCK_DATA=false
+      # - ANTHROPIC_API_KEY=...   # WARNING: SDL is public on-chain. Prefer injecting
+      #                            # secrets another way; the mock brain needs no key.
+    expose:
+      - port: 8000
+        as: 80
+        to:
+          - global: true
+
+profiles:
+  compute:
+    web:
+      resources:
+        cpu:
+          units: 0.5
+        memory:
+          size: 512Mi
+        storage:
+          size: 512Mi
+  placement:
+    dcloud:
+      pricing:
+        web:
+          denom: uakt
+          amount: 10000
+
+deployment:
+  web:
+    dcloud:
+      profile: web
+      count: 1
+
+# Caveat: container storage is ephemeral — the SQLite DB resets on redeploy. Fine for the
+# demo; for persistence add a `storage` volume with `persistent: true`, or point
+# DATABASE_URL at an external Postgres.
