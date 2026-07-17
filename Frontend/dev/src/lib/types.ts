@@ -40,6 +40,12 @@ export interface DayForecast {
   gridState: GridState;
 }
 
+/** One point on the intraday electricity price curve (Home hero scrubber). */
+export interface PricePoint {
+  hour: number; // 0..24
+  cents: number; // ¢/kWh
+}
+
 export interface AdviceItem {
   id: string;
   date: string; // ISO date (YYYY-MM-DD)

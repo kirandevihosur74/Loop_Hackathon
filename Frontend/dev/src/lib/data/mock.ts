@@ -19,6 +19,7 @@ import type {
   GridState,
   LedgerEntry,
   Nudge,
+  PricePoint,
   StatsSummary,
   UsagePoint,
 } from "@/lib/types";
@@ -96,6 +97,23 @@ export async function getLiveUsage(): Promise<UsagePoint[]> {
 export async function getGridState(): Promise<{ state: GridState; priceCents: number }> {
   const state = gridStateForHour(new Date().getHours());
   return delay({ state, priceCents: priceCentsForState(state) });
+}
+
+/** Intraday price forecast curve for the Home hero scrubber (time-of-use shape). */
+export async function getPriceForecast(): Promise<PricePoint[]> {
+  return delay<PricePoint[]>([
+    { hour: 0, cents: 14 },
+    { hour: 3, cents: 9 },
+    { hour: 6, cents: 15 },
+    { hour: 9, cents: 17 },
+    { hour: 12, cents: 11 },
+    { hour: 14, cents: 18 },
+    { hour: 16, cents: 26 },
+    { hour: 17, cents: 34 },
+    { hour: 19, cents: 30 },
+    { hour: 22, cents: 16 },
+    { hour: 24, cents: 14 },
+  ]);
 }
 
 export async function getCurrentNudge(): Promise<Nudge | null> {

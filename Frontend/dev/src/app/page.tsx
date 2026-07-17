@@ -1,17 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getLiveUsage, getGridState, getCurrentNudge } from "@/lib/data";
-import type { GridState, Nudge, UsagePoint } from "@/lib/types";
+import { getPriceForecast, getLiveUsage, getCurrentNudge } from "@/lib/data";
+import type { Nudge, PricePoint } from "@/lib/types";
 import { HomeHero } from "@/components/home/HomeHero";
-import { LiveUsageChart } from "@/components/home/LiveUsageChart";
 import { NudgeCard } from "@/components/home/NudgeCard";
 
-type Grid = { state: GridState; priceCents: number };
-
 interface HomeData {
-  usage: UsagePoint[];
-  grid: Grid;
+  forecast: PricePoint[];
+  nowHour: number;
+  watts: number;
   nudge: Nudge | null;
 }
 
@@ -20,9 +18,13 @@ export default function HomePage() {
 
   useEffect(() => {
     let alive = true;
-    Promise.all([getLiveUsage(), getGridState(), getCurrentNudge()]).then(
-      ([usage, grid, nudge]) => {
-        if (alive) setData({ usage, grid, nudge });
+    Promise.all([getPriceForecast(), getLiveUsage(), getCurrentNudge()]).then(
+      ([forecast, usage, nudge]) => {
+        if (!alive) return;
+        const now = new Date();
+        const nowHour = now.getHours() + now.getMinutes() / 60;
+        const watts = usage.length ? usage[usage.length - 1].watts : 0;
+        setData({ forecast, nowHour, watts, nudge });
       },
     );
     return () => {
@@ -33,21 +35,28 @@ export default function HomePage() {
   if (!data) return <HomeSkeleton />;
 
   return (
-    <main>
-      <HomeHero grid={data.grid} />
+    <main className="pb-4">
+      <HomeHero forecast={data.forecast} nowHour={data.nowHour} />
 
-      {/* White sheet that overlaps the hero, camping-app style. */}
-      <div className="relative z-10 -mt-5 rounded-t-lg bg-card px-4 pb-6 pt-5 shadow-soft">
-        <LiveUsageChart initialPoints={data.usage} grid={data.grid} />
+      {/* Running now */}
+      <div className="mt-3 flex items-center gap-2.5 px-4">
+        <span
+          className="h-2 w-2 rounded-full bg-gold"
+          style={{ boxShadow: "0 0 0 4px var(--gold-l)" }}
+          aria-hidden
+        />
+        <span className="text-sm font-semibold text-sub">Running now</span>
+        <span className="ml-auto text-[15px] font-bold tabular-nums text-ink">
+          {data.watts.toLocaleString()} W
+        </span>
+      </div>
 
+      {/* The one thing to act on */}
+      <div className="mt-3 px-3.5">
         {data.nudge ? (
-          <div className="mt-6">
-            <NudgeCard nudge={data.nudge} />
-          </div>
+          <NudgeCard nudge={data.nudge} />
         ) : (
-          <p className="mt-6 text-center text-sm text-sub">
-            All quiet — nothing needs you right now.
-          </p>
+          <p className="py-6 text-center text-sm text-sub">All quiet — nothing needs you right now.</p>
         )}
       </div>
     </main>
@@ -60,16 +69,16 @@ function HomeSkeleton() {
     <main aria-busy="true">
       <div className="flex items-center justify-between px-4 pt-4">
         <div className="space-y-1.5">
-          <div className="h-3.5 w-24 animate-pulse rounded-md bg-card" />
+          <div className="h-5 w-28 animate-pulse rounded-md bg-card" />
           <div className="h-3 w-16 animate-pulse rounded-md bg-card" />
         </div>
-        <div className="h-11 w-11 animate-pulse rounded-full bg-card" />
+        <div className="h-[38px] w-[38px] animate-pulse rounded-full bg-card" />
       </div>
-      <div className="mt-3 h-56 animate-pulse rounded-b-lg bg-card" />
-      <div className="relative z-10 -mt-5 rounded-t-lg bg-card px-4 pb-6 pt-5 shadow-soft">
-        <div className="h-8 w-32 animate-pulse rounded-md bg-bg" />
-        <div className="mt-3 h-32 w-full animate-pulse rounded-md bg-bg" />
-        <div className="mt-6 h-40 w-full animate-pulse rounded-lg bg-bg" />
+      <div className="mt-3 px-3.5">
+        <div className="h-64 w-full animate-pulse rounded-[11px] bg-card" />
+      </div>
+      <div className="mt-3 px-3.5">
+        <div className="h-40 w-full animate-pulse rounded-[11px] bg-card" />
       </div>
     </main>
   );

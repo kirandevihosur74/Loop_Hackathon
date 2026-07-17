@@ -17,6 +17,7 @@ import type {
   GridState,
   LedgerEntry,
   Nudge,
+  PricePoint,
   StatsSummary,
   UsagePoint,
 } from "@/lib/types";
@@ -50,6 +51,11 @@ export async function getCurrentNudge(): Promise<Nudge | null> {
 /** Current grid price state + rate in cents/kWh. */
 export async function getGridState(): Promise<{ state: GridState; priceCents: number }> {
   return live(api.getGridState, mock.getGridState);
+}
+
+/** Intraday price forecast curve (Home hero scrubber). Mock for now — no backend endpoint yet. */
+export async function getPriceForecast(): Promise<PricePoint[]> {
+  return mock.getPriceForecast();
 }
 
 /** 7-day forward forecast (one entry per day). */
