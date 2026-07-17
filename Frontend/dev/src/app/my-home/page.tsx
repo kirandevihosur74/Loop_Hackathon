@@ -85,7 +85,10 @@ export default function MyHomePage() {
       <div className="flex flex-wrap gap-2 max-[340px]:flex-col">
         <ScanButton
           scanning={scan.scanning}
-          onScan={scan.scan}
+          onCapture={scan.openCamera}
+          cameraRef={scan.cameraRef}
+          cameraId={scan.cameraId}
+          handleFile={scan.handleFile}
           className="flex-1 min-w-[140px]"
         />
         <UploadPhotoButton

@@ -18,8 +18,10 @@ import type { Appliance } from "@/lib/types";
  */
 export function useScan(onScanned: (a: Appliance) => void) {
   const reduce = useReducedMotion();
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);   // gallery / files
+  const cameraRef = useRef<HTMLInputElement>(null);  // live camera (capture)
   const inputId = useId();
+  const cameraId = useId();
   const [scanning, setScanning] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -49,8 +51,11 @@ export function useScan(onScanned: (a: Appliance) => void) {
     }
   }
 
-  function scan() {
-    void detect(null);
+  // "Scan appliance" → open the device camera (capture input). On desktop browsers,
+  // where there is no camera, this falls back to a normal file picker.
+  function openCamera() {
+    if (scanning) return;
+    cameraRef.current?.click();
   }
 
   function openUpload() {
@@ -69,35 +74,58 @@ export function useScan(onScanned: (a: Appliance) => void) {
   return {
     scanning,
     error,
-    scan,
     previewUrl,
     inputRef,
     inputId,
+    cameraRef,
+    cameraId,
+    openCamera,
     openUpload,
     handleFile,
   };
 }
 
-/** The primary (filled gold) trigger — lives in the side-by-side action row. */
+/** The primary (filled gold) trigger — opens the live camera via a capture input. */
 export function ScanButton({
   scanning,
-  onScan,
+  onCapture,
+  cameraRef,
+  cameraId,
+  handleFile,
   className,
 }: {
   scanning: boolean;
-  onScan: () => void;
+  onCapture: () => void;
+  cameraRef: React.RefObject<HTMLInputElement | null>;
+  cameraId: string;
+  handleFile: (e: React.ChangeEvent<HTMLInputElement>) => void;
   className?: string;
 }) {
   return (
-    <PrimaryButton
-      onClick={onScan}
-      disabled={scanning}
-      aria-busy={scanning}
-      className={className}
-    >
-      <CameraIcon />
-      {scanning ? "Scanning…" : "Scan appliance"}
-    </PrimaryButton>
+    <>
+      {/* capture="environment" asks the OS for the rear camera; browsers/WebViews
+          without a camera fall back to a file picker. */}
+      <input
+        ref={cameraRef}
+        id={cameraId}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleFile}
+        className="sr-only"
+        aria-label="Take a photo of an appliance"
+      />
+
+      <PrimaryButton
+        onClick={onCapture}
+        disabled={scanning}
+        aria-busy={scanning}
+        className={className}
+      >
+        <CameraIcon />
+        {scanning ? "Scanning…" : "Scan appliance"}
+      </PrimaryButton>
+    </>
   );
 }
 
