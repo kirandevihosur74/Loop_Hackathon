@@ -1,0 +1,38 @@
+{
+  "photo_file": "20260717_124320.jpg",
+  "device": {
+    "name": "Refrigerator (stainless, French-door style)",
+    "brand": "Whirlpool",
+    "model": "Unknown (badge visible, model not readable)",
+    "category": "Refrigerator/freezer",
+    "identified_from": "visual (Whirlpool badge)"
+  },
+  "nameplate_ratings": {
+    "voltage_v": 120,
+    "frequency_hz": 60,
+    "rated_power_w": {
+      "low": 100,
+      "high": 150,
+      "note": "compressor draw while running; cycles on/off"
+    }
+  },
+  "power_consumption": {
+    "in_use_w": {
+      "running_low": 100,
+      "running_high": 150,
+      "average_low": 50,
+      "average_high": 70
+    },
+    "standby_plugged_in_w": {
+      "note": "always running - no true standby"
+    },
+    "estimated_annual_kwh": {
+      "low": 400,
+      "high": 600,
+      "note": "modern full-size unit; Energy Star models lower (~350-500)"
+    }
+  },
+  "notes": "Runs continuously (cycling). One of the larger always-on loads. Check the inside-wall energy label for the model's rated kWh/year. Keep coils clean and door seals tight to minimize consumption.",
+  "confidence": "medium (brand known, model/label not read)",
+  "data_source": "typical estimate"
+}

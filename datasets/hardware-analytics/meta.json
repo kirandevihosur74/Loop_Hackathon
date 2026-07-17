@@ -1,0 +1,12 @@
+{
+  "name": "hardware-analytics",
+  "title": "Hardware / Appliance Energy Analytics",
+  "record_count": 13,
+  "image_count": 13,
+  "source": "On-site device photos (Samsung + iPhone/HEIC, HEIC decoded to JPG)",
+  "structure": {
+    "images/": "one JPG per source photo (HEIC originals decoded to JPG)",
+    "<photo>.json": "per-photo energy record",
+    "dataset.json": "combined machine-readable array of all records"
+  }
+}

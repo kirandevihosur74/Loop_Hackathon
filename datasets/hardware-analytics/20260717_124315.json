@@ -1,0 +1,42 @@
+{
+  "photo_file": "20260717_124315.jpg",
+  "device": {
+    "name": "Room-Scheduling Touch Panels / Tablets (x2)",
+    "brand": "Unknown (wall-mounted scheduling displays)",
+    "model": "Unknown",
+    "category": "Wall/desk touch-panel displays (room booking)",
+    "identified_from": "visual (one shows a clock home screen, one shows a 'Room 302-305' booking screen)"
+  },
+  "nameplate_ratings": {
+    "voltage_v": "PoE or 5 V USB (typical)",
+    "frequency_hz": 60,
+    "rated_power_w": {
+      "per_device_low": 5,
+      "per_device_high": 15,
+      "note": "typical for a PoE tablet/scheduler"
+    }
+  },
+  "power_consumption": {
+    "in_use_w": {
+      "per_device_low": 5,
+      "per_device_high": 15
+    },
+    "standby_plugged_in_w": {
+      "per_device_low": 2,
+      "per_device_high": 6,
+      "note": "screens are always on"
+    },
+    "energy_per_day_kwh": {
+      "per_device_low": 0.12,
+      "per_device_high": 0.36
+    },
+    "estimated_annual_kwh": {
+      "low": 45,
+      "high": 130,
+      "note": "for both panels, always-on"
+    }
+  },
+  "notes": "Two always-on panels. Individually tiny, but running 24/7. Often powered over Ethernet (PoE). Low priority for energy savings.",
+  "confidence": "low (devices not model-identified)",
+  "data_source": "typical estimate"
+}

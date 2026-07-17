@@ -1,0 +1,37 @@
+{
+  "photo_file": "IMG_4085.HEIC.heic",
+  "viewable_jpg": "IMG_4085.HEIC.jpg",
+  "device": {
+    "name": "Hydronic Fan-Coil Unit (with air filter)",
+    "brand": "Unknown",
+    "model": "Unknown",
+    "category": "Space heating/cooling - hydronic fan-coil unit (FCU)",
+    "identified_from": "visual + on-site confirmation: water supply pipe, bottom access panels, air filter + grille (air drawn through -> has a blower), single cable powering the fan. Industrial building with central boiler."
+  },
+  "heat_source": "Building hot-water boiler (gas/central plant) for heat; electricity powers only the blower fan",
+  "nameplate_ratings": {
+    "voltage_v": "120 (typical for FCU fan motor)",
+    "electric_load": "blower fan motor only"
+  },
+  "power_consumption": {
+    "electricity_in_use_w": {
+      "low": 50,
+      "high": 150,
+      "note": "blower fan when running; PSC vs ECM motor affects the figure"
+    },
+    "standby_plugged_in_w": {
+      "low": 0,
+      "high": 5,
+      "note": "controls only when fan is off"
+    },
+    "estimated_annual_electricity_kwh": {
+      "low": 100,
+      "high": 400,
+      "note": "fan runtime dependent; only the fan, not the heat"
+    },
+    "thermal_note": "Heating/cooling energy comes from boiler/chiller water (BTU/hr), not electricity. Only the fan is on the electric bill."
+  },
+  "notes": "CONFIRMED HYDRONIC FAN-COIL. The filter + grille means a fan draws room air across a hot-water coil; the single cable is the fan power. Electric load is just the blower (~50-150 W running); the actual heat is boiler fuel.",
+  "confidence": "high (type confirmed on-site: hydronic fan-coil)",
+  "data_source": "on-site confirmation (hydronic fan-coil)"
+}

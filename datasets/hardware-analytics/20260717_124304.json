@@ -1,0 +1,44 @@
+{
+  "photo_file": "20260717_124304.jpg",
+  "device": {
+    "name": "Laser Projector (WUXGA) - second angle",
+    "brand": "Panasonic",
+    "model": "PT-RZ970",
+    "category": "Professional installation projector",
+    "identified_from": "nameplate on chassis (same unit as 20260717_124301.jpg)"
+  },
+  "nameplate_ratings": {
+    "voltage_v": {
+      "low": 100,
+      "high": 240
+    },
+    "frequency_hz": "50/60",
+    "rated_power_w": {
+      "typical": 840
+    },
+    "resolution": "WUXGA 1920x1200",
+    "light_source": "laser (no lamp)"
+  },
+  "power_consumption": {
+    "in_use_w": {
+      "low": 700,
+      "high": 880,
+      "typical": 840
+    },
+    "standby_plugged_in_w": {
+      "eco": 0.5,
+      "network_normal": 35
+    },
+    "energy_per_hour_kwh": {
+      "low": 0.7,
+      "high": 0.88
+    },
+    "estimated_annual_kwh": {
+      "low": 400,
+      "high": 1200
+    }
+  },
+  "notes": "Same projector as 20260717_124301.jpg, different angle.",
+  "confidence": "high (model identified from nameplate)",
+  "data_source": "model spec (Panasonic PT-RZ970)"
+}

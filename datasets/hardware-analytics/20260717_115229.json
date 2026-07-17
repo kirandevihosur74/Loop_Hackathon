@@ -1,0 +1,45 @@
+{
+  "photo_file": "20260717_115229.jpg",
+  "device": {
+    "name": "Bottleless Water Dispenser - specification label",
+    "brand": "Wellsys",
+    "model": "S4",
+    "category": "Point-of-use water cooler/heater (nameplate photo)",
+    "identified_from": "nameplate / rating label"
+  },
+  "nameplate_ratings": {
+    "voltage_v": 120,
+    "frequency_hz": 60,
+    "current_a": 4.5,
+    "rated_power_w": 540,
+    "refrigerant": "R-134a (46 g)",
+    "weight_lbs": 57.3,
+    "mfg_date": "2023-08-01",
+    "origin": "Made in Korea"
+  },
+  "power_consumption": {
+    "in_use_cold_w": {
+      "low": 90,
+      "high": 130
+    },
+    "in_use_hot_w": {
+      "low": 350,
+      "high": 500
+    },
+    "standby_plugged_in_w": {
+      "low": 15,
+      "high": 40
+    },
+    "typical_daily_kwh": {
+      "low": 0.7,
+      "high": 1.5
+    },
+    "estimated_annual_kwh": {
+      "low": 250,
+      "high": 450
+    }
+  },
+  "notes": "Same unit as 20260717_115226.jpg. This is the back rating plate confirming 120 V / 4.5 A / 540 W max.",
+  "confidence": "high (nameplate available)",
+  "data_source": "nameplate"
+}

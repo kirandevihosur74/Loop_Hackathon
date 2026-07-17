@@ -1,0 +1,36 @@
+{
+  "photo_file": "IMG_4084.HEIC.heic",
+  "viewable_jpg": "IMG_4084.HEIC.jpg",
+  "device": {
+    "name": "Hydronic Fin-Tube Baseboard Convector (under window)",
+    "brand": "Unknown",
+    "model": "Unknown",
+    "category": "Space heating - hydronic (hot-water) baseboard, natural convection",
+    "identified_from": "visual + on-site confirmation: pressurized water supply pipe entering unit, access panels bottom left/right, single control cable (no power whip). Industrial building with central boiler."
+  },
+  "heat_source": "Building hot-water boiler (gas/central plant) - heating energy is BOILER FUEL, not this unit's electricity",
+  "nameplate_ratings": {
+    "voltage_v": "n/a for heat (hydronic)",
+    "electric_load": "controls only (thermostat / zone valve actuator)"
+  },
+  "power_consumption": {
+    "electricity_in_use_w": {
+      "low": 0,
+      "high": 5,
+      "note": "no fan; only a zone valve/thermostat may draw a few watts"
+    },
+    "standby_plugged_in_w": {
+      "low": 0,
+      "high": 2
+    },
+    "estimated_annual_electricity_kwh": {
+      "low": 0,
+      "high": 5,
+      "note": "electrically negligible"
+    },
+    "thermal_note": "Real heat output is significant but comes from boiler water (measured in BTU/hr, not electricity). Track the boiler's gas/fuel use for the true heating energy, not this unit."
+  },
+  "notes": "CONFIRMED HYDRONIC. Water supply pipe + bottom access panels + single control cable, no electric power feed. For an ELECTRICITY inventory this unit is effectively zero. Heating energy belongs to the central boiler (fuel-based).",
+  "confidence": "high (type confirmed on-site: hydronic)",
+  "data_source": "on-site confirmation (hydronic)"
+}

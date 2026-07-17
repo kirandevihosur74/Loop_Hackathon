@@ -1,0 +1,44 @@
+{
+  "photo_file": "20260717_115241.jpg",
+  "device": {
+    "name": "Commercial Microwave Oven",
+    "brand": "Panasonic",
+    "model": "Pro / NE-series (exact model not visible)",
+    "category": "Commercial microwave oven",
+    "identified_from": "visual (Panasonic branding + commercial keypad)"
+  },
+  "nameplate_ratings": {
+    "voltage_v": 120,
+    "frequency_hz": 60,
+    "output_power_w": 1000,
+    "input_power_w": {
+      "low": 1400,
+      "high": 1600,
+      "note": "typical input for 1000 W output"
+    }
+  },
+  "power_consumption": {
+    "in_use_w": {
+      "low": 1400,
+      "high": 1600
+    },
+    "standby_plugged_in_w": {
+      "low": 1,
+      "high": 3,
+      "note": "digital display/clock"
+    },
+    "energy_per_use_wh": {
+      "low": 45,
+      "high": 55,
+      "note": "~2 min heat"
+    },
+    "estimated_annual_kwh": {
+      "low": 10,
+      "high": 40,
+      "note": "usage-dependent + ~10-25 kWh/yr display standby"
+    }
+  },
+  "notes": "Cheap per use; only standby cost is the digital display. Photograph the rear rating plate for exact input wattage.",
+  "confidence": "medium (no nameplate; typical commercial-unit estimate)",
+  "data_source": "typical estimate"
+}

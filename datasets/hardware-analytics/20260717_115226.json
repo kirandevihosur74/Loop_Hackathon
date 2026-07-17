@@ -1,0 +1,48 @@
+{
+  "photo_file": "20260717_115226.jpg",
+  "device": {
+    "name": "Bottleless Water Dispenser (Hot / Cold / Sparkling / Ambient)",
+    "brand": "Wellsys",
+    "model": "S4",
+    "category": "Point-of-use water cooler/heater",
+    "identified_from": "visual (front); nameplate confirmed in 20260717_115229.jpg"
+  },
+  "nameplate_ratings": {
+    "voltage_v": 120,
+    "frequency_hz": 60,
+    "current_a": 4.5,
+    "rated_power_w": 540,
+    "refrigerant": "R-134a (46 g)"
+  },
+  "power_consumption": {
+    "in_use_cold_w": {
+      "low": 90,
+      "high": 130
+    },
+    "in_use_hot_w": {
+      "low": 350,
+      "high": 500
+    },
+    "standby_plugged_in_w": {
+      "low": 15,
+      "high": 40
+    },
+    "energy_per_pour_wh": {
+      "cold_low": 1,
+      "cold_high": 3,
+      "hot_low": 10,
+      "hot_high": 25
+    },
+    "typical_daily_kwh": {
+      "low": 0.7,
+      "high": 1.5
+    },
+    "estimated_annual_kwh": {
+      "low": 250,
+      "high": 450
+    }
+  },
+  "notes": "Maintains a hot tank and a chilled tank 24/7 \u2014 standby/idle energy dominates, not dispensing. Sparkling uses CO2 (no extra electricity). Use eco/night mode on the hot tank to cut standby, the largest cost.",
+  "confidence": "high (nameplate available)",
+  "data_source": "nameplate + typical operating estimates"
+}

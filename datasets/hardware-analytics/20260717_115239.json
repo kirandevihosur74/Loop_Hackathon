@@ -1,0 +1,39 @@
+{
+  "photo_file": "20260717_115239.jpg",
+  "device": {
+    "name": "4-Slice Toaster (stainless steel)",
+    "brand": "Unknown (no visible nameplate)",
+    "model": "Unknown",
+    "category": "Countertop toaster",
+    "identified_from": "visual"
+  },
+  "nameplate_ratings": {
+    "voltage_v": 120,
+    "frequency_hz": 60,
+    "rated_power_w": {
+      "low": 1400,
+      "high": 1800,
+      "note": "typical for a 4-slot toaster"
+    }
+  },
+  "power_consumption": {
+    "in_use_w": {
+      "low": 1400,
+      "high": 1800
+    },
+    "standby_plugged_in_w": 0,
+    "energy_per_use_wh": {
+      "low": 60,
+      "high": 90,
+      "note": "~3 min cycle, 4 slices"
+    },
+    "estimated_annual_kwh": {
+      "low": 5,
+      "high": 20,
+      "note": "assumes 1-3 batches/day"
+    }
+  },
+  "notes": "High wattage but very short runtime, so cheap overall. Draws essentially nothing when idle; no benefit to unplugging. Photograph the bottom label for exact wattage.",
+  "confidence": "medium (no nameplate; typical-model estimate)",
+  "data_source": "typical estimate"
+}

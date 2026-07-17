@@ -1,0 +1,571 @@
+{
+  "dataset": "hardware-analytics",
+  "description": "Appliance / hardware energy-consumption breakdown derived from on-site device photos. Each record covers one photo: device identification, nameplate ratings where readable, and in-use vs plugged-in (standby) power, with per-photo JSON provenance.",
+  "record_count": 13,
+  "fields": [
+    "photo_file",
+    "viewable_jpg",
+    "device",
+    "heat_source",
+    "nameplate_ratings",
+    "power_consumption",
+    "notes",
+    "confidence",
+    "data_source"
+  ],
+  "confidence_legend": "high = value backed by a visible nameplate or on-site confirmation; medium/low = typical-model estimate",
+  "records": [
+    {
+      "photo_file": "20260717_115226.jpg",
+      "device": {
+        "name": "Bottleless Water Dispenser (Hot / Cold / Sparkling / Ambient)",
+        "brand": "Wellsys",
+        "model": "S4",
+        "category": "Point-of-use water cooler/heater",
+        "identified_from": "visual (front); nameplate confirmed in 20260717_115229.jpg"
+      },
+      "nameplate_ratings": {
+        "voltage_v": 120,
+        "frequency_hz": 60,
+        "current_a": 4.5,
+        "rated_power_w": 540,
+        "refrigerant": "R-134a (46 g)"
+      },
+      "power_consumption": {
+        "in_use_cold_w": {
+          "low": 90,
+          "high": 130
+        },
+        "in_use_hot_w": {
+          "low": 350,
+          "high": 500
+        },
+        "standby_plugged_in_w": {
+          "low": 15,
+          "high": 40
+        },
+        "energy_per_pour_wh": {
+          "cold_low": 1,
+          "cold_high": 3,
+          "hot_low": 10,
+          "hot_high": 25
+        },
+        "typical_daily_kwh": {
+          "low": 0.7,
+          "high": 1.5
+        },
+        "estimated_annual_kwh": {
+          "low": 250,
+          "high": 450
+        }
+      },
+      "notes": "Maintains a hot tank and a chilled tank 24/7 \u2014 standby/idle energy dominates, not dispensing. Sparkling uses CO2 (no extra electricity). Use eco/night mode on the hot tank to cut standby, the largest cost.",
+      "confidence": "high (nameplate available)",
+      "data_source": "nameplate + typical operating estimates"
+    },
+    {
+      "photo_file": "20260717_115229.jpg",
+      "device": {
+        "name": "Bottleless Water Dispenser - specification label",
+        "brand": "Wellsys",
+        "model": "S4",
+        "category": "Point-of-use water cooler/heater (nameplate photo)",
+        "identified_from": "nameplate / rating label"
+      },
+      "nameplate_ratings": {
+        "voltage_v": 120,
+        "frequency_hz": 60,
+        "current_a": 4.5,
+        "rated_power_w": 540,
+        "refrigerant": "R-134a (46 g)",
+        "weight_lbs": 57.3,
+        "mfg_date": "2023-08-01",
+        "origin": "Made in Korea"
+      },
+      "power_consumption": {
+        "in_use_cold_w": {
+          "low": 90,
+          "high": 130
+        },
+        "in_use_hot_w": {
+          "low": 350,
+          "high": 500
+        },
+        "standby_plugged_in_w": {
+          "low": 15,
+          "high": 40
+        },
+        "typical_daily_kwh": {
+          "low": 0.7,
+          "high": 1.5
+        },
+        "estimated_annual_kwh": {
+          "low": 250,
+          "high": 450
+        }
+      },
+      "notes": "Same unit as 20260717_115226.jpg. This is the back rating plate confirming 120 V / 4.5 A / 540 W max.",
+      "confidence": "high (nameplate available)",
+      "data_source": "nameplate"
+    },
+    {
+      "photo_file": "20260717_115239.jpg",
+      "device": {
+        "name": "4-Slice Toaster (stainless steel)",
+        "brand": "Unknown (no visible nameplate)",
+        "model": "Unknown",
+        "category": "Countertop toaster",
+        "identified_from": "visual"
+      },
+      "nameplate_ratings": {
+        "voltage_v": 120,
+        "frequency_hz": 60,
+        "rated_power_w": {
+          "low": 1400,
+          "high": 1800,
+          "note": "typical for a 4-slot toaster"
+        }
+      },
+      "power_consumption": {
+        "in_use_w": {
+          "low": 1400,
+          "high": 1800
+        },
+        "standby_plugged_in_w": 0,
+        "energy_per_use_wh": {
+          "low": 60,
+          "high": 90,
+          "note": "~3 min cycle, 4 slices"
+        },
+        "estimated_annual_kwh": {
+          "low": 5,
+          "high": 20,
+          "note": "assumes 1-3 batches/day"
+        }
+      },
+      "notes": "High wattage but very short runtime, so cheap overall. Draws essentially nothing when idle; no benefit to unplugging. Photograph the bottom label for exact wattage.",
+      "confidence": "medium (no nameplate; typical-model estimate)",
+      "data_source": "typical estimate"
+    },
+    {
+      "photo_file": "20260717_115241.jpg",
+      "device": {
+        "name": "Commercial Microwave Oven",
+        "brand": "Panasonic",
+        "model": "Pro / NE-series (exact model not visible)",
+        "category": "Commercial microwave oven",
+        "identified_from": "visual (Panasonic branding + commercial keypad)"
+      },
+      "nameplate_ratings": {
+        "voltage_v": 120,
+        "frequency_hz": 60,
+        "output_power_w": 1000,
+        "input_power_w": {
+          "low": 1400,
+          "high": 1600,
+          "note": "typical input for 1000 W output"
+        }
+      },
+      "power_consumption": {
+        "in_use_w": {
+          "low": 1400,
+          "high": 1600
+        },
+        "standby_plugged_in_w": {
+          "low": 1,
+          "high": 3,
+          "note": "digital display/clock"
+        },
+        "energy_per_use_wh": {
+          "low": 45,
+          "high": 55,
+          "note": "~2 min heat"
+        },
+        "estimated_annual_kwh": {
+          "low": 10,
+          "high": 40,
+          "note": "usage-dependent + ~10-25 kWh/yr display standby"
+        }
+      },
+      "notes": "Cheap per use; only standby cost is the digital display. Photograph the rear rating plate for exact input wattage.",
+      "confidence": "medium (no nameplate; typical commercial-unit estimate)",
+      "data_source": "typical estimate"
+    },
+    {
+      "photo_file": "20260717_124301.jpg",
+      "device": {
+        "name": "Laser Projector (WUXGA, 3-chip DLP laser-phosphor)",
+        "brand": "Panasonic",
+        "model": "PT-RZ970",
+        "category": "Professional installation projector",
+        "identified_from": "nameplate on chassis (PT-RZ970 / WUXGA)"
+      },
+      "nameplate_ratings": {
+        "voltage_v": {
+          "low": 100,
+          "high": 240
+        },
+        "frequency_hz": "50/60",
+        "rated_power_w": {
+          "typical": 840,
+          "note": "manufacturer spec ~840 W at 100-120 V"
+        },
+        "resolution": "WUXGA 1920x1200",
+        "light_source": "laser (no lamp)"
+      },
+      "power_consumption": {
+        "in_use_w": {
+          "low": 700,
+          "high": 880,
+          "typical": 840
+        },
+        "standby_plugged_in_w": {
+          "eco": 0.5,
+          "network_normal": 35,
+          "note": "0.5 W in ECO standby; up to ~35 W with LAN/quick-start standby"
+        },
+        "energy_per_hour_kwh": {
+          "low": 0.7,
+          "high": 0.88
+        },
+        "estimated_annual_kwh": {
+          "low": 400,
+          "high": 1200,
+          "note": "assumes several hours/day of projection"
+        }
+      },
+      "notes": "Laser light source (no lamp to replace). Biggest savings: set STANDBY MODE to ECO (0.5 W) instead of network standby (~35 W), and power fully off when idle.",
+      "confidence": "high (model identified from nameplate; specs from Panasonic data)",
+      "data_source": "model spec (Panasonic PT-RZ970)"
+    },
+    {
+      "photo_file": "20260717_124304.jpg",
+      "device": {
+        "name": "Laser Projector (WUXGA) - second angle",
+        "brand": "Panasonic",
+        "model": "PT-RZ970",
+        "category": "Professional installation projector",
+        "identified_from": "nameplate on chassis (same unit as 20260717_124301.jpg)"
+      },
+      "nameplate_ratings": {
+        "voltage_v": {
+          "low": 100,
+          "high": 240
+        },
+        "frequency_hz": "50/60",
+        "rated_power_w": {
+          "typical": 840
+        },
+        "resolution": "WUXGA 1920x1200",
+        "light_source": "laser (no lamp)"
+      },
+      "power_consumption": {
+        "in_use_w": {
+          "low": 700,
+          "high": 880,
+          "typical": 840
+        },
+        "standby_plugged_in_w": {
+          "eco": 0.5,
+          "network_normal": 35
+        },
+        "energy_per_hour_kwh": {
+          "low": 0.7,
+          "high": 0.88
+        },
+        "estimated_annual_kwh": {
+          "low": 400,
+          "high": 1200
+        }
+      },
+      "notes": "Same projector as 20260717_124301.jpg, different angle.",
+      "confidence": "high (model identified from nameplate)",
+      "data_source": "model spec (Panasonic PT-RZ970)"
+    },
+    {
+      "photo_file": "20260717_124315.jpg",
+      "device": {
+        "name": "Room-Scheduling Touch Panels / Tablets (x2)",
+        "brand": "Unknown (wall-mounted scheduling displays)",
+        "model": "Unknown",
+        "category": "Wall/desk touch-panel displays (room booking)",
+        "identified_from": "visual (one shows a clock home screen, one shows a 'Room 302-305' booking screen)"
+      },
+      "nameplate_ratings": {
+        "voltage_v": "PoE or 5 V USB (typical)",
+        "frequency_hz": 60,
+        "rated_power_w": {
+          "per_device_low": 5,
+          "per_device_high": 15,
+          "note": "typical for a PoE tablet/scheduler"
+        }
+      },
+      "power_consumption": {
+        "in_use_w": {
+          "per_device_low": 5,
+          "per_device_high": 15
+        },
+        "standby_plugged_in_w": {
+          "per_device_low": 2,
+          "per_device_high": 6,
+          "note": "screens are always on"
+        },
+        "energy_per_day_kwh": {
+          "per_device_low": 0.12,
+          "per_device_high": 0.36
+        },
+        "estimated_annual_kwh": {
+          "low": 45,
+          "high": 130,
+          "note": "for both panels, always-on"
+        }
+      },
+      "notes": "Two always-on panels. Individually tiny, but running 24/7. Often powered over Ethernet (PoE). Low priority for energy savings.",
+      "confidence": "low (devices not model-identified)",
+      "data_source": "typical estimate"
+    },
+    {
+      "photo_file": "20260717_124320.jpg",
+      "device": {
+        "name": "Refrigerator (stainless, French-door style)",
+        "brand": "Whirlpool",
+        "model": "Unknown (badge visible, model not readable)",
+        "category": "Refrigerator/freezer",
+        "identified_from": "visual (Whirlpool badge)"
+      },
+      "nameplate_ratings": {
+        "voltage_v": 120,
+        "frequency_hz": 60,
+        "rated_power_w": {
+          "low": 100,
+          "high": 150,
+          "note": "compressor draw while running; cycles on/off"
+        }
+      },
+      "power_consumption": {
+        "in_use_w": {
+          "running_low": 100,
+          "running_high": 150,
+          "average_low": 50,
+          "average_high": 70
+        },
+        "standby_plugged_in_w": {
+          "note": "always running - no true standby"
+        },
+        "estimated_annual_kwh": {
+          "low": 400,
+          "high": 600,
+          "note": "modern full-size unit; Energy Star models lower (~350-500)"
+        }
+      },
+      "notes": "Runs continuously (cycling). One of the larger always-on loads. Check the inside-wall energy label for the model's rated kWh/year. Keep coils clean and door seals tight to minimize consumption.",
+      "confidence": "medium (brand known, model/label not read)",
+      "data_source": "typical estimate"
+    },
+    {
+      "photo_file": "20260717_130133.jpg",
+      "device": {
+        "name": "Laptop AC Adapter / Power Supply (230 W)",
+        "brand": "Lenovo",
+        "model": "ADL230SLC3A (P/N SA10R16889, FRU 02DL143)",
+        "category": "Laptop charger / external power supply",
+        "identified_from": "nameplate / rating label (held in hand)"
+      },
+      "nameplate_ratings": {
+        "input_voltage_range_v": {
+          "low": 100,
+          "high": 240
+        },
+        "input_current_a": 3.5,
+        "frequency_hz": "50/60",
+        "output_v": 20.0,
+        "output_current_a": 11.5,
+        "output_power_w": 230,
+        "mfg_date": "2021-12",
+        "origin": "Made in China"
+      },
+      "power_consumption": {
+        "in_use_w": {
+          "low": 30,
+          "high": 250,
+          "note": "output up to 230 W; input ~250 W at full load (~90% efficient). Typical laptop use far less; full draw only under heavy CPU/GPU load"
+        },
+        "standby_plugged_in_w": {
+          "low": 0.1,
+          "high": 0.5,
+          "note": "no-load draw when laptop unplugged/charged"
+        },
+        "energy_per_charge_wh": {
+          "low": 60,
+          "high": 120,
+          "note": "to charge a large laptop battery once"
+        },
+        "estimated_annual_kwh": {
+          "low": 20,
+          "high": 120,
+          "note": "usage-dependent; high end assumes a heavily-used workstation laptop"
+        }
+      },
+      "notes": "This is a high-wattage (230 W) charger for a workstation/gaming-class Lenovo laptop. Actual draw tracks laptop workload, not the 230 W rating. No-load standby is negligible; unplugging when fully charged saves very little.",
+      "confidence": "high (nameplate available)",
+      "data_source": "nameplate"
+    },
+    {
+      "photo_file": "IMG_4081.HEIC.heic",
+      "viewable_jpg": "IMG_4081.HEIC.jpg",
+      "device": {
+        "name": "Charging Station (GaN, AC outlets + USB)",
+        "brand": "Anker",
+        "model": "727 Charging Station (GaNPrime 100W), A9126",
+        "category": "USB + AC charging station / power strip",
+        "identified_from": "visual (front); nameplate confirmed in IMG_4083.HEIC"
+      },
+      "nameplate_ratings": {
+        "voltage_v": 125,
+        "frequency_hz": 60,
+        "current_a": 10,
+        "ac_passthrough_rating_w": 1250,
+        "usb_total_output_w": 100,
+        "note": "2 AC outlets rated 1250 W total pass-through; USB ports 100 W total"
+      },
+      "power_consumption": {
+        "in_use_w": {
+          "usb_max": 100,
+          "note": "plus whatever AC devices draw, up to 1250 W pass-through"
+        },
+        "standby_plugged_in_w": {
+          "low": 0.1,
+          "high": 0.5,
+          "note": "GaN charger no-load draw"
+        },
+        "energy_per_charge_wh": {
+          "low": 20,
+          "high": 90,
+          "note": "e.g. phone ~20 Wh, laptop ~60-90 Wh"
+        },
+        "estimated_annual_kwh": {
+          "low": 5,
+          "high": 40,
+          "note": "usage-dependent; near-zero at idle"
+        }
+      },
+      "notes": "Very efficient GaN charger with negligible idle draw. Total load depends entirely on what is plugged in (up to 100 W USB + up to 1250 W through the AC outlets).",
+      "confidence": "high (model + nameplate available)",
+      "data_source": "nameplate"
+    },
+    {
+      "photo_file": "IMG_4083.HEIC.heic",
+      "viewable_jpg": "IMG_4083.HEIC.jpg",
+      "device": {
+        "name": "Charging Station - specification label",
+        "brand": "Anker",
+        "model": "727 Charging Station (GaNPrime 100W), A9126",
+        "category": "USB + AC charging station (nameplate photo)",
+        "identified_from": "nameplate / rating label"
+      },
+      "nameplate_ratings": {
+        "voltage_v": 125,
+        "frequency_hz": 60,
+        "current_a": 10,
+        "ac_passthrough_rating_w": 1250,
+        "usb_total_output_w": 100,
+        "usb_c_single_max_w": 100,
+        "input_voltage_range_v": {
+          "low": 100,
+          "high": 240
+        },
+        "origin": "Made in Vietnam"
+      },
+      "power_consumption": {
+        "in_use_w": {
+          "usb_max": 100,
+          "ac_passthrough_max": 1250
+        },
+        "standby_plugged_in_w": {
+          "low": 0.1,
+          "high": 0.5
+        },
+        "estimated_annual_kwh": {
+          "low": 5,
+          "high": 40
+        }
+      },
+      "notes": "Same unit as IMG_4081.HEIC. Rating label: 125 V ~60 Hz 10 A 1250 W (AC outlets); USB 100 W max total.",
+      "confidence": "high (nameplate available)",
+      "data_source": "nameplate"
+    },
+    {
+      "photo_file": "IMG_4084.HEIC.heic",
+      "viewable_jpg": "IMG_4084.HEIC.jpg",
+      "device": {
+        "name": "Hydronic Fin-Tube Baseboard Convector (under window)",
+        "brand": "Unknown",
+        "model": "Unknown",
+        "category": "Space heating - hydronic (hot-water) baseboard, natural convection",
+        "identified_from": "visual + on-site confirmation: pressurized water supply pipe entering unit, access panels bottom left/right, single control cable (no power whip). Industrial building with central boiler."
+      },
+      "heat_source": "Building hot-water boiler (gas/central plant) - heating energy is BOILER FUEL, not this unit's electricity",
+      "nameplate_ratings": {
+        "voltage_v": "n/a for heat (hydronic)",
+        "electric_load": "controls only (thermostat / zone valve actuator)"
+      },
+      "power_consumption": {
+        "electricity_in_use_w": {
+          "low": 0,
+          "high": 5,
+          "note": "no fan; only a zone valve/thermostat may draw a few watts"
+        },
+        "standby_plugged_in_w": {
+          "low": 0,
+          "high": 2
+        },
+        "estimated_annual_electricity_kwh": {
+          "low": 0,
+          "high": 5,
+          "note": "electrically negligible"
+        },
+        "thermal_note": "Real heat output is significant but comes from boiler water (measured in BTU/hr, not electricity). Track the boiler's gas/fuel use for the true heating energy, not this unit."
+      },
+      "notes": "CONFIRMED HYDRONIC. Water supply pipe + bottom access panels + single control cable, no electric power feed. For an ELECTRICITY inventory this unit is effectively zero. Heating energy belongs to the central boiler (fuel-based).",
+      "confidence": "high (type confirmed on-site: hydronic)",
+      "data_source": "on-site confirmation (hydronic)"
+    },
+    {
+      "photo_file": "IMG_4085.HEIC.heic",
+      "viewable_jpg": "IMG_4085.HEIC.jpg",
+      "device": {
+        "name": "Hydronic Fan-Coil Unit (with air filter)",
+        "brand": "Unknown",
+        "model": "Unknown",
+        "category": "Space heating/cooling - hydronic fan-coil unit (FCU)",
+        "identified_from": "visual + on-site confirmation: water supply pipe, bottom access panels, air filter + grille (air drawn through -> has a blower), single cable powering the fan. Industrial building with central boiler."
+      },
+      "heat_source": "Building hot-water boiler (gas/central plant) for heat; electricity powers only the blower fan",
+      "nameplate_ratings": {
+        "voltage_v": "120 (typical for FCU fan motor)",
+        "electric_load": "blower fan motor only"
+      },
+      "power_consumption": {
+        "electricity_in_use_w": {
+          "low": 50,
+          "high": 150,
+          "note": "blower fan when running; PSC vs ECM motor affects the figure"
+        },
+        "standby_plugged_in_w": {
+          "low": 0,
+          "high": 5,
+          "note": "controls only when fan is off"
+        },
+        "estimated_annual_electricity_kwh": {
+          "low": 100,
+          "high": 400,
+          "note": "fan runtime dependent; only the fan, not the heat"
+        },
+        "thermal_note": "Heating/cooling energy comes from boiler/chiller water (BTU/hr), not electricity. Only the fan is on the electric bill."
+      },
+      "notes": "CONFIRMED HYDRONIC FAN-COIL. The filter + grille means a fan draws room air across a hot-water coil; the single cable is the fan power. Electric load is just the blower (~50-150 W running); the actual heat is boiler fuel.",
+      "confidence": "high (type confirmed on-site: hydronic fan-coil)",
+      "data_source": "on-site confirmation (hydronic fan-coil)"
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "photo_file": "IMG_4081.HEIC.heic",
+  "viewable_jpg": "IMG_4081.HEIC.jpg",
+  "device": {
+    "name": "Charging Station (GaN, AC outlets + USB)",
+    "brand": "Anker",
+    "model": "727 Charging Station (GaNPrime 100W), A9126",
+    "category": "USB + AC charging station / power strip",
+    "identified_from": "visual (front); nameplate confirmed in IMG_4083.HEIC"
+  },
+  "nameplate_ratings": {
+    "voltage_v": 125,
+    "frequency_hz": 60,
+    "current_a": 10,
+    "ac_passthrough_rating_w": 1250,
+    "usb_total_output_w": 100,
+    "note": "2 AC outlets rated 1250 W total pass-through; USB ports 100 W total"
+  },
+  "power_consumption": {
+    "in_use_w": {
+      "usb_max": 100,
+      "note": "plus whatever AC devices draw, up to 1250 W pass-through"
+    },
+    "standby_plugged_in_w": {
+      "low": 0.1,
+      "high": 0.5,
+      "note": "GaN charger no-load draw"
+    },
+    "energy_per_charge_wh": {
+      "low": 20,
+      "high": 90,
+      "note": "e.g. phone ~20 Wh, laptop ~60-90 Wh"
+    },
+    "estimated_annual_kwh": {
+      "low": 5,
+      "high": 40,
+      "note": "usage-dependent; near-zero at idle"
+    }
+  },
+  "notes": "Very efficient GaN charger with negligible idle draw. Total load depends entirely on what is plugged in (up to 100 W USB + up to 1250 W through the AC outlets).",
+  "confidence": "high (model + nameplate available)",
+  "data_source": "nameplate"
+}

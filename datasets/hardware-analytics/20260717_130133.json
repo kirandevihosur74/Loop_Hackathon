@@ -1,0 +1,48 @@
+{
+  "photo_file": "20260717_130133.jpg",
+  "device": {
+    "name": "Laptop AC Adapter / Power Supply (230 W)",
+    "brand": "Lenovo",
+    "model": "ADL230SLC3A (P/N SA10R16889, FRU 02DL143)",
+    "category": "Laptop charger / external power supply",
+    "identified_from": "nameplate / rating label (held in hand)"
+  },
+  "nameplate_ratings": {
+    "input_voltage_range_v": {
+      "low": 100,
+      "high": 240
+    },
+    "input_current_a": 3.5,
+    "frequency_hz": "50/60",
+    "output_v": 20.0,
+    "output_current_a": 11.5,
+    "output_power_w": 230,
+    "mfg_date": "2021-12",
+    "origin": "Made in China"
+  },
+  "power_consumption": {
+    "in_use_w": {
+      "low": 30,
+      "high": 250,
+      "note": "output up to 230 W; input ~250 W at full load (~90% efficient). Typical laptop use far less; full draw only under heavy CPU/GPU load"
+    },
+    "standby_plugged_in_w": {
+      "low": 0.1,
+      "high": 0.5,
+      "note": "no-load draw when laptop unplugged/charged"
+    },
+    "energy_per_charge_wh": {
+      "low": 60,
+      "high": 120,
+      "note": "to charge a large laptop battery once"
+    },
+    "estimated_annual_kwh": {
+      "low": 20,
+      "high": 120,
+      "note": "usage-dependent; high end assumes a heavily-used workstation laptop"
+    }
+  },
+  "notes": "This is a high-wattage (230 W) charger for a workstation/gaming-class Lenovo laptop. Actual draw tracks laptop workload, not the 230 W rating. No-load standby is negligible; unplugging when fully charged saves very little.",
+  "confidence": "high (nameplate available)",
+  "data_source": "nameplate"
+}
