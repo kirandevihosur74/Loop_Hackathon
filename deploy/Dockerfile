@@ -12,9 +12,13 @@ ENV PYTHONUNBUFFERED=1 \
 # Deps (kept in sync with backend/pyproject.toml). No build step needed for the app.
 RUN pip install --no-cache-dir \
     "fastapi>=0.111" "uvicorn[standard]>=0.30" "sqlmodel>=0.0.21" \
-    "pydantic-settings>=2.3" "anthropic>=0.39" "apscheduler>=3.10" "httpx>=0.27"
+    "pydantic-settings>=2.3" "anthropic>=0.39" "apscheduler>=3.10" "httpx>=0.27" \
+    "pillow>=10.0"
 
 COPY backend/app ./app
+# SF shadow dataset — the sun/orientation signal. Point the app at it via env.
+COPY datasets/shadow_data ./datasets/shadow_data
+ENV SHADOW_DATA_DIR=/app/datasets/shadow_data
 
 EXPOSE 8000
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

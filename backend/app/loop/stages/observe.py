@@ -6,6 +6,7 @@ from sqlmodel import Session, select
 
 from ... import ingest
 from ...data.models import Appliance, Household, Nudge, NudgeStatus, Outcome, Snapshot
+from ...ingest import shadow
 from .reflect import suppressed_kinds
 
 
@@ -47,6 +48,7 @@ def build_context(session: Session, household: Household, snapshot: Snapshot) ->
             {"type": a.type, "model": a.model, "power_kw": a.power_kw, "flexible": a.flexible}
             for a in appliances
         ],
+        "sun": shadow.sun_state(household),
         "active_kinds": sorted({n.kind for n in active}),
         "suppressed_kinds": suppressed_kinds(session, household.id),
         "recent_outcomes": [

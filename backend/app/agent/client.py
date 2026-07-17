@@ -51,13 +51,18 @@ def _mock_plan(context: dict) -> list[dict]:
     active = set(context.get("active_kinds", []))
     recs: list[dict] = []
 
-    def add(kind, appliance_type, action, reason, run_hours, window):
-        if kind in suppressed or kind in active or appliance_type not in appliances:
+    def add(kind, appliance_type, action, reason, run_hours, window, fixed_savings=None):
+        if kind in suppressed or kind in active:
             return
-        power = appliances[appliance_type]["power_kw"]
-        # savings ~ energy x price gap to a ~median 15c/kWh baseline
-        gap_c = max(0.0, 15.0 - price) if pct <= 0.5 else max(0.0, price - 15.0)
-        savings = round(power * run_hours * gap_c, 1)
+        if appliance_type is not None and appliance_type not in appliances:
+            return
+        if fixed_savings is not None:
+            savings = fixed_savings
+        else:
+            power = appliances[appliance_type]["power_kw"]
+            # savings ~ energy x price gap to a ~median 15c/kWh baseline
+            gap_c = max(0.0, 15.0 - price) if pct <= 0.5 else max(0.0, price - 15.0)
+            savings = round(power * run_hours * gap_c, 1)
         recs.append({
             "kind": kind,
             "action": action,
@@ -81,5 +86,27 @@ def _mock_plan(context: dict) -> list[dict]:
         add("raise_ac_setpoint", "ac", "Nudge the AC up 2°F",
             f"Grid is expensive now ({price:.0f}c/kWh) and it's {snap['temp_c']:.0f}°C out.", 2.0, 120)
 
+    # Sun/shade signal (SF shadow dataset) — orientation-aware nudges.
+    sun = context.get("sun")
+    if sun and sun.get("period") == "day":
+        temp = snap["temp_c"]
+        if sun.get("in_sun") and temp >= 20 and pct >= 0.5:
+            facing = _compass(sun.get("sun_az"))
+            add("close_blinds", None, f"Close your {facing}-facing blinds",
+                f"Direct sun on your place now (sun {facing}, {temp:.0f}°C) with power at "
+                f"{price:.0f}c/kWh — blocking it cuts AC load.", 0, 90,
+                fixed_savings=round(max(4.0, price * 0.6), 1))
+        if not sun.get("in_sun") and any(sun.get("in_sun_next_2h", [])) and pct <= 0.4:
+            add("precool_ac", "ac", "Pre-cool now while power's cheap",
+                f"Sun reaches your place within ~2h; cooling now at {price:.0f}c/kWh "
+                f"beats cooling into the peak.", 2.0, 120)
+
     recs.sort(key=lambda r: r["est_savings_c"], reverse=True)
     return recs[:3]
+
+
+def _compass(azimuth) -> str:
+    if azimuth is None:
+        return "sun"
+    dirs = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+    return dirs[int((azimuth % 360) / 45 + 0.5) % 8]

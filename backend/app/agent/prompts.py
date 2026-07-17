@@ -14,6 +14,10 @@ You are given:
 - active_kinds: nudge kinds already live — do not duplicate.
 - suppressed_kinds: kinds to avoid (low responsiveness).
 - recent_outcomes: how prior nudges went, so you learn what this user actually does.
+- sun: physical/orientation context (may be null). {in_sun: is the home in direct sun now,
+  sun_elev, sun_az (compass degrees), in_sun_next_2h: [next two hours]}. Use it:
+  * in_sun + warm + pricey → suggest close_blinds (name the facing from sun_az) or raise_ac_setpoint.
+  * shaded now but in_sun_next_2h and price cheap now → suggest precool_ac (cool cheap before the sun+peak hit).
 
 Rules of thumb:
 - price_percentile <= 0.35 → good time to RUN flexible loads (dishwasher, EV charge, laundry).

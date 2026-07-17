@@ -28,6 +28,10 @@ class Settings(BaseSettings):
     nexla_sink_url: str = ""
     gridstatus_api_key: str = ""
 
+    # Shadow/sun signal (teammate's SF shadow dataset → sun-aware nudges).
+    shadow_enabled: bool = True
+    shadow_data_dir: str = ""       # blank → repo datasets/shadow_data; set in Docker
+
     # Nudge delivery via Zero.xyz (agent tool layer; pays per call in USDC on Base).
     # Two safety gates: disabled by default, AND dry-run by default (build the CLI call
     # but do NOT spend) — flip both off + fund the wallet to actually send.
