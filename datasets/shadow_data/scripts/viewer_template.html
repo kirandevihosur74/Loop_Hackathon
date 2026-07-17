@@ -1,0 +1,299 @@
+<title>SF Shadow Atlas — Dawn to Dusk</title>
+<style>
+  :root{
+    --sun:#f4a63b; --sun-soft:#f6c274;
+    --bg:#0d1017; --panel:#141a24; --panel-2:#0f141d; --border:#232c3a;
+    --text:#e9edf3; --muted:#8b95a7; --muted-2:#5f6a7d;
+    --map-ground:#0a0d14; --water:#0c1420; --shade-chip:#1a2340; --sun-chip:#3a2c12;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  @media (prefers-color-scheme: light){
+    :root{
+      --bg:#efece4; --panel:#fbfaf6; --panel-2:#f3f0e8; --border:#ddd6c8;
+      --text:#181b21; --muted:#5c6472; --muted-2:#8a91a0;
+      --shade-chip:#dfe3ee; --sun-chip:#f7e6c8;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0d1017; --panel:#141a24; --panel-2:#0f141d; --border:#232c3a;
+    --text:#e9edf3; --muted:#8b95a7; --muted-2:#5f6a7d;
+    --shade-chip:#1a2340; --sun-chip:#3a2c12;
+  }
+  :root[data-theme="light"]{
+    --bg:#efece4; --panel:#fbfaf6; --panel-2:#f3f0e8; --border:#ddd6c8;
+    --text:#181b21; --muted:#5c6472; --muted-2:#8a91a0;
+    --shade-chip:#dfe3ee; --sun-chip:#f7e6c8;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);
+       line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1220px;margin:0 auto;padding:28px 20px 60px}
+  header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px 28px;
+         border-bottom:1px solid var(--border);padding-bottom:20px;margin-bottom:22px}
+  .title h1{margin:0;font-size:clamp(22px,3.4vw,34px);font-weight:650;letter-spacing:-.02em;
+            text-wrap:balance}
+  .title .sub{color:var(--muted);font-size:14px;margin-top:4px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+           color:var(--sun);margin-bottom:8px}
+  .facts{display:flex;gap:22px;margin-left:auto;flex-wrap:wrap}
+  .fact{font-family:var(--mono)}
+  .fact .n{font-size:19px;font-weight:600;font-variant-numeric:tabular-nums}
+  .fact .l{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-2)}
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px}
+  @media (max-width:880px){.grid{grid-template-columns:1fr}}
+  .mapcard{background:var(--map-ground);border:1px solid var(--border);border-radius:12px;
+           overflow:hidden;position:relative}
+  #map{display:block;width:100%;height:auto;cursor:crosshair;background:var(--water)}
+  .maptip{position:absolute;left:12px;top:12px;font-family:var(--mono);font-size:11px;
+          color:var(--muted);background:color-mix(in srgb,var(--map-ground) 78%,transparent);
+          padding:5px 9px;border-radius:6px;border:1px solid var(--border);pointer-events:none}
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px 16px 18px}
+  .panel h2{margin:0 0 12px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+            color:var(--muted);font-weight:600}
+  .scrub{display:flex;flex-direction:column;gap:10px}
+  .timerow{display:flex;align-items:baseline;justify-content:space-between}
+  .bigtime{font-family:var(--mono);font-size:30px;font-weight:600;font-variant-numeric:tabular-nums}
+  .ampm{color:var(--muted);font-size:14px;margin-left:6px}
+  input[type=range]{width:100%;accent-color:var(--sun);height:26px}
+  .sunreadout{display:flex;gap:18px;font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:2px}
+  .sunreadout b{color:var(--text);font-weight:600}
+  .sunarc{margin:4px auto 0;display:block}
+  .qpanel .coord{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:12px;word-break:break-all}
+  .status{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:600;margin-bottom:14px}
+  .dot{width:14px;height:14px;border-radius:50%;flex:none}
+  .dot.sun{background:var(--sun);box-shadow:0 0 0 4px color-mix(in srgb,var(--sun) 22%,transparent)}
+  .dot.shade{background:#61708f;box-shadow:0 0 0 4px color-mix(in srgb,#61708f 22%,transparent)}
+  .strip{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin-top:6px}
+  .cell{height:34px;border-radius:4px;position:relative;cursor:pointer;border:1px solid transparent}
+  .cell.sun{background:var(--sun-chip)}
+  .cell.shade{background:var(--shade-chip)}
+  .cell.on{border-color:var(--sun)}
+  .cell .h{position:absolute;bottom:2px;left:0;right:0;text-align:center;font-family:var(--mono);
+           font-size:8.5px;color:var(--muted-2)}
+  .cell .top{position:absolute;top:3px;left:0;right:0;text-align:center;font-size:10px}
+  .hint{color:var(--muted);font-size:12.5px;margin-top:12px;line-height:1.45}
+  .legend{display:flex;gap:16px;margin-top:14px;font-size:12px;color:var(--muted)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .sw{width:12px;height:12px;border-radius:3px}
+  footer{margin-top:26px;color:var(--muted-2);font-size:11.5px;font-family:var(--mono);line-height:1.7}
+  .btns{display:flex;gap:8px;margin-top:12px}
+  button{font-family:var(--sans);font-size:12px;color:var(--text);background:var(--panel-2);
+         border:1px solid var(--border);border-radius:7px;padding:7px 12px;cursor:pointer}
+  button:hover{border-color:var(--sun)}
+  button:focus-visible,#map:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="title">
+      <div class="eyebrow">Solar Shadow Model · OpenStreetMap</div>
+      <h1>San Francisco Shadow Atlas</h1>
+      <div class="sub">Sausalito to Daly City — computed shade for <span id="dateLbl"></span>, dawn to dusk. Click anywhere to test a point.</div>
+    </div>
+    <div class="facts">
+      <div class="fact"><div class="n" id="fBuild">—</div><div class="l">Buildings</div></div>
+      <div class="fact"><div class="n" id="fArea">—</div><div class="l">Area km²</div></div>
+      <div class="fact"><div class="n" id="fRes">—</div><div class="l">Grid m/px</div></div>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div class="mapcard">
+      <canvas id="map" tabindex="0"></canvas>
+      <div class="maptip" id="mapTip">move over map…</div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:20px">
+      <div class="panel scrub">
+        <h2>Time of day</h2>
+        <div class="timerow">
+          <div><span class="bigtime" id="bigTime">7:00</span><span class="ampm" id="ampm">AM</span></div>
+        </div>
+        <input type="range" id="slider" min="0" max="11" value="0" step="1" aria-label="Hour of day">
+        <div class="sunreadout">
+          <span>elev <b id="rElev">—</b>°</span>
+          <span>azim <b id="rAz">—</b>°</span>
+          <span>in shadow <b id="rPct">—</b> km²</span>
+        </div>
+        <canvas class="sunarc" id="sunArc" width="288" height="96"></canvas>
+        <div class="btns">
+          <button id="playBtn">▶ Play day</button>
+          <button id="themeBtn">◐ Theme</button>
+        </div>
+      </div>
+
+      <div class="panel qpanel">
+        <h2>Point test</h2>
+        <div class="coord" id="qCoord">Click the map to pick a point.</div>
+        <div class="status"><span class="dot" id="qDot"></span><span id="qStatus">— no point selected —</span></div>
+        <div class="strip" id="strip"></div>
+        <div class="legend">
+          <span><span class="sw" style="background:var(--sun-chip)"></span>in sun</span>
+          <span><span class="sw" style="background:var(--shade-chip)"></span>in shade</span>
+        </div>
+        <div class="hint">Each cell is one hour (7 AM → 6 PM). Click a cell to jump the map to that hour.</div>
+      </div>
+    </div>
+  </div>
+
+  <footer id="foot"></footer>
+</div>
+
+<script>
+const ASSETS = __ASSETS__;
+const M = ASSETS.meta;
+const T = M.times;
+const N = M.N, W = M.W, MLAT = M.M_LAT, MLON = M.M_LON, MPP = M.mpp;
+const NAT_W = M.width, NAT_H = M.height;
+
+// facts
+document.getElementById('dateLbl').textContent = M.date + ' (' + M.tz + ')';
+document.getElementById('fBuild').textContent = M.building_count.toLocaleString();
+document.getElementById('fArea').textContent = M.area_km2;
+document.getElementById('fRes').textContent = MPP;
+document.getElementById('foot').textContent =
+  'Method: OSM building footprints + heights → sun position (NOAA) → shadow = footprint projected h/tan(elevation) opposite the sun. '
+  + 'Raster ' + NAT_W + '×' + NAT_H + ' @ ' + MPP + ' m/px. Heights estimated from building:levels where absent. No API keys used.';
+
+// load images
+const baseImg = new Image(); baseImg.src = ASSETS.base;
+const shadeImgs = ASSETS.shades.map(s => { const i = new Image(); i.src = s; return i; });
+let alpha = new Array(12).fill(null); // lazy per-hour alpha arrays (native res)
+
+const map = document.getElementById('map');
+map.width = NAT_W; map.height = NAT_H;
+const ctx = map.getContext('2d');
+
+let hour = 0, marker = null;
+
+function groundBg(){
+  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--water') || '#0c1420';
+  ctx.fillRect(0,0,NAT_W,NAT_H);
+}
+function render(){
+  groundBg();
+  if (baseImg.complete) ctx.drawImage(baseImg,0,0);
+  if (shadeImgs[hour].complete) ctx.drawImage(shadeImgs[hour],0,0);
+  if (marker){
+    ctx.beginPath();
+    ctx.arc(marker.px, marker.py, Math.max(6,NAT_W/240), 0, Math.PI*2);
+    ctx.lineWidth = Math.max(2,NAT_W/500); ctx.strokeStyle = '#f4a63b';
+    ctx.stroke();
+    ctx.beginPath(); ctx.arc(marker.px, marker.py, Math.max(2,NAT_W/900),0,Math.PI*2);
+    ctx.fillStyle='#f4a63b'; ctx.fill();
+  }
+  const t = T[hour];
+  const h12 = ((t.hour+11)%12)+1;
+  document.getElementById('bigTime').textContent = h12+':00';
+  document.getElementById('ampm').textContent = t.hour<12?'AM':'PM';
+  document.getElementById('rElev').textContent = t.elev.toFixed(1);
+  document.getElementById('rAz').textContent = t.az.toFixed(0);
+  document.getElementById('rPct').textContent = t.shaded_km2.toFixed(1);
+  drawSunArc(t);
+  if (marker) updatePoint();
+}
+
+function ensureAlpha(h){
+  if (alpha[h]) return alpha[h];
+  const c = document.createElement('canvas'); c.width=NAT_W; c.height=NAT_H;
+  const cc = c.getContext('2d'); cc.drawImage(shadeImgs[h],0,0);
+  const d = cc.getImageData(0,0,NAT_W,NAT_H).data;
+  const a = new Uint8Array(NAT_W*NAT_H);
+  for (let i=0,j=3;i<a.length;i++,j+=4) a[i]=d[j];
+  alpha[h]=a; return a;
+}
+function shadedAt(px,py,h){
+  if (px<0||py<0||px>=NAT_W||py>=NAT_H) return false;
+  const a = ensureAlpha(h);
+  return a[(py|0)*NAT_W+(px|0)] > 0;
+}
+
+function pxToLL(px,py){
+  const lon = W + px*MPP/MLON;
+  const lat = N - py*MPP/MLAT;
+  return [lat,lon];
+}
+
+function updatePoint(){
+  const {px,py} = marker;
+  const [lat,lon] = pxToLL(px,py);
+  document.getElementById('qCoord').textContent = lat.toFixed(5)+', '+lon.toFixed(5);
+  const strip = document.getElementById('strip'); strip.innerHTML='';
+  let sunHrs=0;
+  T.forEach((t,i)=>{
+    const sh = shadedAt(px,py,i);
+    if(!sh) sunHrs++;
+    const cell=document.createElement('div');
+    cell.className='cell '+(sh?'shade':'sun')+(i===hour?' on':'');
+    cell.innerHTML='<div class="top">'+(sh?'🌑':'☀️')+'</div><div class="h">'+t.hour+'</div>';
+    cell.title=t.label+' — '+(sh?'shade':'sun');
+    cell.onclick=()=>{hour=i;document.getElementById('slider').value=i;render();};
+    strip.appendChild(cell);
+  });
+  const shNow = shadedAt(px,py,hour);
+  document.getElementById('qDot').className='dot '+(shNow?'shade':'sun');
+  document.getElementById('qStatus').textContent =
+    (shNow?'In shadow':'In sun')+' at '+T[hour].label+'  ·  '+sunHrs+' of 12 h sunlit';
+}
+
+map.addEventListener('click',(e)=>{
+  const r=map.getBoundingClientRect();
+  const px=(e.clientX-r.left)/r.width*NAT_W;
+  const py=(e.clientY-r.top)/r.height*NAT_H;
+  marker={px,py}; render();
+});
+map.addEventListener('mousemove',(e)=>{
+  const r=map.getBoundingClientRect();
+  const px=(e.clientX-r.left)/r.width*NAT_W;
+  const py=(e.clientY-r.top)/r.height*NAT_H;
+  const [lat,lon]=pxToLL(px,py);
+  document.getElementById('mapTip').textContent=lat.toFixed(4)+', '+lon.toFixed(4);
+});
+
+// sun arc widget
+function drawSunArc(t){
+  const c=document.getElementById('sunArc'); const g=c.getContext('2d');
+  const w=c.width,h=c.height; g.clearRect(0,0,w,h);
+  const cx=w/2, cy=h-14, R=h-26;
+  const cs=getComputedStyle(document.documentElement);
+  const border=cs.getPropertyValue('--border')||'#232c3a';
+  const muted=cs.getPropertyValue('--muted-2')||'#5f6a7d';
+  g.strokeStyle=border; g.lineWidth=1;
+  g.beginPath(); g.moveTo(cx-R-6,cy); g.lineTo(cx+R+6,cy); g.stroke();
+  g.beginPath(); g.arc(cx,cy,R,Math.PI,0); g.stroke();
+  // azimuth mapped E(90)->right, S(180)->bottom(front), W(270)->left; use compass to arc angle
+  // project: horizontal position by azimuth relative to south, elevation by height
+  const azr=(t.az-180)*Math.PI/180;      // -90(E)..0(S)..+90(W)
+  const el=Math.max(0,t.elev)*Math.PI/180;
+  const x=cx+Math.sin(azr)*R*Math.cos(el);
+  const y=cy-Math.sin(el)*R;
+  g.fillStyle=muted; g.font='9px '+ 'monospace';
+  g.fillText('E',cx-R-4,cy+11); g.fillText('W',cx+R-2,cy+11); g.fillText('S',cx-3,cy+11);
+  g.beginPath(); g.arc(x,y,6,0,Math.PI*2);
+  g.fillStyle='#f4a63b'; g.shadowColor='#f4a63b'; g.shadowBlur=12; g.fill(); g.shadowBlur=0;
+}
+
+// controls
+const slider=document.getElementById('slider');
+slider.addEventListener('input',()=>{hour=+slider.value;render();});
+let playing=null;
+document.getElementById('playBtn').addEventListener('click',(e)=>{
+  if(playing){clearInterval(playing);playing=null;e.target.textContent='▶ Play day';return;}
+  e.target.textContent='⏸ Pause';
+  playing=setInterval(()=>{hour=(hour+1)%12;slider.value=hour;render();},650);
+});
+document.getElementById('themeBtn').addEventListener('click',()=>{
+  const cur=document.documentElement.getAttribute('data-theme');
+  const dark=cur? cur==='dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  document.documentElement.setAttribute('data-theme', dark?'light':'dark');
+  render();
+});
+
+let loaded=0;
+function onload(){ if(++loaded>= (1+shadeImgs.length)) render(); }
+baseImg.onload=onload; shadeImgs.forEach(i=>i.onload=onload);
+// size canvas display height via aspect (CSS width:100%)
+render();
+</script>
