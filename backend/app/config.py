@@ -8,8 +8,9 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    # Agent brain — Claude API direct
+    # Agent brain — Claude (or a Claude-compatible gateway)
     anthropic_api_key: str = ""
+    anthropic_base_url: str = ""                        # blank = api.anthropic.com; set for a gateway
     plan_model: str = "claude-haiku-4-5-20251001"      # cheap, high-cadence "digestive work"
     analysis_model: str = "claude-sonnet-5"            # heavier weekly analysis
 

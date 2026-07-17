@@ -25,6 +25,17 @@ Rules of thumb:
 - Estimate savings from power_kw x price delta x typical run hours. Bigger, confident savings first.
 - credit_reward scales with savings (roughly 1 credit per 5c saved, min 1, max 20).
 - window_minutes = how long the opportunity realistically lasts.
-- Emit 0-3 nudges. Fewer, high-confidence nudges beat spam. If nothing is worth it, emit none.
+- Emit 0-3 nudges. Fewer, high-confidence nudges beat spam. If nothing is worth it, emit none."""
 
-Call emit_recommendations with your decision. Do not write prose."""
+
+PLAN_JSON_INSTRUCTION = """Respond with ONLY a JSON object — no prose, no markdown fences — of this shape:
+{"recommendations": [
+  {"kind": "<stable slug e.g. shift_dishwasher|charge_ev_offpeak|delay_dryer|precool_ac|close_blinds>",
+   "action": "<short imperative shown to the user>",
+   "reason": "<one line on why now>",
+   "est_savings_c": <number, cents saved>,
+   "credit_reward": <integer credits>,
+   "window_minutes": <integer, how long the opportunity lasts>,
+   "confidence": <0..1>}
+]}
+Emit 0-3 items. If nothing is worthwhile, return {"recommendations": []}. Output the JSON and nothing else."""

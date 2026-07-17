@@ -8,36 +8,58 @@ import json
 from typing import Optional
 
 from ..config import get_settings
-from .prompts import SYSTEM_PROMPT
-from .tools import RECOMMEND_TOOL
+from .prompts import PLAN_JSON_INSTRUCTION, SYSTEM_PROMPT
 
 
 def plan_recommendations(context: dict, model: Optional[str] = None) -> tuple[list[dict], str]:
-    """Return (recommendations, model_used)."""
+    """Return (recommendations, model_used).
+
+    Uses JSON-in-text (not forced tool_use) so it works with the real Anthropic API and
+    with Claude-compatible gateways that don't support tool calling. Any failure — API
+    error or unparseable output — falls back to the rule-based mock brain.
+    """
     settings = get_settings()
     if not settings.anthropic_api_key:
         return _mock_plan(context), "mock"
 
     import anthropic
 
-    client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+    # Some Claude-compatible gateways sit behind a WAF that blocks the default
+    # "Anthropic/Python" User-Agent — override it when a custom base_url is set.
+    extra = {"default_headers": {"User-Agent": "loop-backend/1.0"}} if settings.anthropic_base_url else {}
+    client = anthropic.Anthropic(
+        api_key=settings.anthropic_api_key,
+        base_url=settings.anthropic_base_url or None,   # custom gateway if set
+        **extra,
+    )
     model = model or settings.plan_model
     try:
         message = client.messages.create(
             model=model,
             max_tokens=1024,
-            system=SYSTEM_PROMPT,
-            tools=[RECOMMEND_TOOL],
-            tool_choice={"type": "tool", "name": "emit_recommendations"},
+            system=SYSTEM_PROMPT + "\n\n" + PLAN_JSON_INSTRUCTION,
             messages=[{"role": "user", "content": json.dumps(context, default=str)}],
         )
-        for block in message.content:
-            if getattr(block, "type", None) == "tool_use" and block.name == "emit_recommendations":
-                return list(block.input.get("recommendations", [])), model
-        return [], model
+        text = "".join(getattr(b, "text", "") for b in message.content if getattr(b, "type", None) == "text")
+        return _parse_recs(text), model
     except Exception as exc:  # never let a bad API call break the loop / demo
-        fallback = _mock_plan(context)
-        return fallback, f"mock(fallback:{type(exc).__name__})"
+        return _mock_plan(context), f"mock(fallback:{type(exc).__name__})"
+
+
+def _parse_recs(text: str) -> list[dict]:
+    """Extract the recommendations list from the model's text (tolerates ``` fences/prose)."""
+    t = text.strip()
+    if "```" in t:  # strip a ```json ... ``` fence if present
+        parts = t.split("```")
+        t = max(parts, key=len)
+        if t.lstrip().lower().startswith("json"):
+            t = t.lstrip()[4:]
+    start, end = t.find("{"), t.rfind("}")
+    if start < 0 or end <= start:
+        return []
+    obj = json.loads(t[start:end + 1])   # raises on bad JSON -> caller falls back to mock
+    recs = obj.get("recommendations", []) if isinstance(obj, dict) else []
+    return [r for r in recs if isinstance(r, dict) and r.get("kind")]
 
 
 # --- rule-based fallback (also the keyless demo brain) ---------------------------------
