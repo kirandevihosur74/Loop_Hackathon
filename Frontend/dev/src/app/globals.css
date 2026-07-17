@@ -122,10 +122,10 @@ html.night {
   --color-red: var(--peak);
   --color-red-light: var(--peak-l);
 
-  /* ---- radii: sharp 5px everywhere rectangular; pill stays for circles ---- */
-  --radius-sm: 5px;
-  --radius-md: 5px;
-  --radius-lg: 5px;
+  /* ---- radii: modern-iOS 11px on rectangles; pill stays for circles ---- */
+  --radius-sm: 8px;
+  --radius-md: 11px;
+  --radius-lg: 11px;
   --radius-pill: 999px;
 
   /* ---- soft shadows (theme-aware tint) ---- */

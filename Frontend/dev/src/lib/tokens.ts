@@ -55,9 +55,9 @@ export const cssVar = {
 } as const;
 
 export const radius = {
-  sm: 5,
-  md: 5,
-  lg: 5,
+  sm: 8,
+  md: 11,
+  lg: 11,
   pill: 999,
 } as const;
 
