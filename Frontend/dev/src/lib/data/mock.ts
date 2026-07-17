@@ -22,6 +22,7 @@ import type {
   StatsSummary,
   UsagePoint,
 } from "@/lib/types";
+import { HARDWARE_DEVICES, HARDWARE_SCAN_EXTRAS, toAppliance } from "./hardware";
 
 /* ---------- helpers ---------- */
 
@@ -247,24 +248,33 @@ export async function getStats(range: "day" | "week" | "month"): Promise<StatsSu
     .reduce((s, h) => s + h.kwh, 0);
   const timingScorePct = Math.round((cheapKwh / totalKwh) * 100);
 
+  // "Where your watts go" — a real breakdown, weighted from the hardware
+  // dataset's annual-kWh figures and scaled to this range's actual usage so the
+  // bars sum to what was used. Top devices shown individually; the tail bundled.
+  const AVG_RATE = 0.27; // blended time-of-use $/kWh
+  const weightTotal = HARDWARE_DEVICES.reduce((s, d) => s + d.annualKwh, 0);
+  const ranked = HARDWARE_DEVICES.map((d) => ({
+    name: d.name,
+    type: d.type,
+    kwh: (totalKwh * d.annualKwh) / weightTotal,
+  })).sort((a, b) => b.kwh - a.kwh);
+  const TOP = 6;
+  const restKwh = ranked.slice(TOP).reduce((s, a) => s + a.kwh, 0);
   const byAppliance = [
-    { name: "EV charging", type: "ev" as const, kwh: 9.2 * scale, costUsd: 1.29 * scale },
-    { name: "Heating & AC", type: "hvac" as const, kwh: 7.8 * scale, costUsd: 1.72 * scale },
-    { name: "Kitchen", type: "kitchen" as const, kwh: 3.1 * scale, costUsd: 0.94 * scale },
-    { name: "Laundry", type: "laundry" as const, kwh: 1.6 * scale, costUsd: 0.41 * scale },
-    { name: "Electronics", type: "electronics" as const, kwh: 2.0 * scale, costUsd: 0.55 * scale },
-  ]
-    .map((a) => ({
-      ...a,
-      kwh: Math.round(a.kwh * 10) / 10,
-      costUsd: Math.round(a.costUsd * 100) / 100,
-    }))
-    .sort((a, b) => b.kwh - a.kwh);
+    ...ranked.slice(0, TOP),
+    ...(restKwh > 0.05 ? [{ name: "Other devices", type: "other" as const, kwh: restKwh }] : []),
+  ].map((a) => ({
+    name: a.name,
+    type: a.type,
+    kwh: Math.round(a.kwh * 10) / 10,
+    costUsd: Math.round(a.kwh * AVG_RATE * 100) / 100,
+  }));
 
-  const carKwh = Math.round(9.2 * scale * 10) / 10;
+  const totalCostUsd = Math.round(totalKwh * AVG_RATE * 100) / 100;
+  // Home vs vehicle split — an illustrative usage lens (not from the device set).
+  const carKwh = Math.round(totalKwh * 0.32 * 10) / 10;
   const homeKwh = Math.round((totalKwh - carKwh) * 10) / 10;
-  const totalCostUsd = Math.round(byAppliance.reduce((s, a) => s + a.costUsd, 0) * 100) / 100;
-  const carCost = Math.round(1.29 * scale * 100) / 100;
+  const carCost = Math.round(carKwh * AVG_RATE * 100) / 100;
 
   return delay({
     range,
@@ -362,23 +372,16 @@ export async function getLedger(): Promise<LedgerEntry[]> {
 
 /* ---------- appliances (in-memory mutable) ---------- */
 
-const appliances: Appliance[] = [
-  { id: "a1", name: "Tesla Model 3", type: "ev", kw: 7.6, note: "Level 2 charger, garage" },
-  { id: "a2", name: "Central AC", type: "hvac", kw: 3.5, note: "2-stage, upstairs" },
-  { id: "a3", name: "Heat pump water heater", type: "hvac", kw: 4.5 },
-  { id: "a4", name: "Dishwasher", type: "kitchen", kw: 1.8 },
-  { id: "a5", name: "Washer + Dryer", type: "laundry", kw: 5.0, note: "Electric dryer" },
-  { id: "a6", name: "Fridge", type: "kitchen", kw: 0.15 },
-  { id: "a7", name: "Home office", type: "electronics", kw: 0.4, note: "2 monitors + desktop" },
-];
+// Seeded from the real hardware-analytics dataset (curated in ./hardware).
+const appliances: Appliance[] = HARDWARE_DEVICES.map(toAppliance);
 
-/** Rotating pool of appliances a "scan" might detect. */
-const SCAN_POOL: Omit<Appliance, "id">[] = [
-  { name: "Pool pump", type: "other", kw: 1.1, note: "Detected via scan" },
-  { name: "Space heater", type: "hvac", kw: 1.5, note: "Detected via scan" },
-  { name: "Microwave", type: "kitchen", kw: 1.2, note: "Detected via scan" },
-  { name: "Gaming PC", type: "electronics", kw: 0.6, note: "Detected via scan" },
-];
+/** Rotating pool of devices a "scan" might detect (also from the dataset). */
+const SCAN_POOL: Omit<Appliance, "id">[] = HARDWARE_SCAN_EXTRAS.map((d) => ({
+  name: d.name,
+  type: d.type,
+  kw: d.kw,
+  note: d.note,
+}));
 let scanIdx = 0;
 let idCounter = 100;
 
