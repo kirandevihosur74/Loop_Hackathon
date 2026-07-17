@@ -51,7 +51,7 @@ to force the offline mock price curve; add `NEXLA_SINK_URL` to prefer a Nexla si
 
 ---
 
-## API — integration contract (for teammates)
+## API contracts
 
 | Method & path | Purpose |
 |---|---|
