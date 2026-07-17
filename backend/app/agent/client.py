@@ -8,7 +8,10 @@ import json
 from typing import Optional
 
 from ..config import get_settings
+from ..obs import get_logger, metrics, timed
 from .prompts import PLAN_JSON_INSTRUCTION, SYSTEM_PROMPT
+
+log = get_logger("agent")
 
 
 def plan_recommendations(context: dict, model: Optional[str] = None) -> tuple[list[dict], str]:
@@ -20,6 +23,7 @@ def plan_recommendations(context: dict, model: Optional[str] = None) -> tuple[li
     """
     settings = get_settings()
     if not settings.anthropic_api_key:
+        metrics.inc("agent.plan.mock")
         return _mock_plan(context), "mock"
 
     import anthropic
@@ -34,15 +38,22 @@ def plan_recommendations(context: dict, model: Optional[str] = None) -> tuple[li
     )
     model = model or settings.plan_model
     try:
-        message = client.messages.create(
-            model=model,
-            max_tokens=1024,
-            system=SYSTEM_PROMPT + "\n\n" + PLAN_JSON_INSTRUCTION,
-            messages=[{"role": "user", "content": json.dumps(context, default=str)}],
-        )
+        with timed("agent.plan.claude") as t:
+            message = client.messages.create(
+                model=model,
+                max_tokens=1024,
+                system=SYSTEM_PROMPT + "\n\n" + PLAN_JSON_INSTRUCTION,
+                messages=[{"role": "user", "content": json.dumps(context, default=str)}],
+            )
         text = "".join(getattr(b, "text", "") for b in message.content if getattr(b, "type", None) == "text")
-        return _parse_recs(text), model
+        recs = _parse_recs(text)
+        metrics.inc("agent.plan.claude_ok")
+        log.info(f"plan model={model} recs={len(recs)} latency={t.ms:.0f}ms")
+        log.debug(f"plan raw response: {text[:500]}")
+        return recs, model
     except Exception as exc:  # never let a bad API call break the loop / demo
+        metrics.inc("agent.plan.fallback")
+        log.warning(f"plan fell back to mock: {type(exc).__name__}: {exc}")
         return _mock_plan(context), f"mock(fallback:{type(exc).__name__})"
 
 

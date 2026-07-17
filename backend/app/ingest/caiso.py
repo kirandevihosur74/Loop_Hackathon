@@ -19,7 +19,10 @@ from typing import Optional
 import httpx
 
 from ..config import get_settings
+from ..obs import get_logger
 from . import weather
+
+log = get_logger("ingest.caiso")
 
 OASIS_URL = "https://oasis.caiso.com/oasisapi/SingleZip"
 
@@ -76,7 +79,8 @@ def _fetch_price(node: str) -> Optional[dict]:
         resp.raise_for_status()
         archive = zipfile.ZipFile(io.BytesIO(resp.content))
         text = archive.read(archive.namelist()[0]).decode("utf-8", "replace")
-    except Exception:
+    except Exception as exc:
+        log.warning(f"OASIS fetch failed node={node}: {type(exc).__name__}: {exc}")
         return None
 
     # Keep total-LMP rows (LMP_TYPE == LMP); price ($/MWh) sits in the "MW" column.

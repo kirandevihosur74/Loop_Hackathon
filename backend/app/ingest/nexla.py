@@ -17,6 +17,9 @@ from typing import Optional
 import httpx
 
 from ..config import get_settings
+from ..obs import get_logger
+
+log = get_logger("ingest.nexla")
 
 _ACCEPT = "application/vnd.nexla.api.v1+json"
 
@@ -40,8 +43,10 @@ def _get_token(settings) -> Optional[str]:
         token = body["access_token"]
         ttl = max(60, int(body.get("expires_in", 3600)) - 60)
         _token_cache.update(token=token, exp=now + ttl)
+        log.info(f"token refreshed ttl={ttl}s")
         return token
-    except Exception:
+    except Exception as exc:
+        log.warning(f"token exchange failed: {type(exc).__name__}: {exc}")
         return None
 
 
@@ -84,8 +89,12 @@ def _read_nexset(settings) -> Optional[dict]:
             return None
         newest = max(samples, key=_ingest_ts)
         # Nexla wraps each record's payload under `rawMessage`; tolerate a bare row too.
-        return _map_row(newest.get("rawMessage", newest))
-    except Exception:
+        row = _map_row(newest.get("rawMessage", newest))
+        if row is None:
+            log.warning("nexset sample lacked a usable price payload")
+        return row
+    except Exception as exc:
+        log.warning(f"nexset read failed: {type(exc).__name__}: {exc}")
         return None
 
 
@@ -107,7 +116,8 @@ def read_latest(household) -> Optional[dict]:
             if isinstance(row, list):
                 row = row[-1] if row else None
             return _map_row(row)
-        except Exception:
+        except Exception as exc:
+            log.warning(f"legacy sink read failed: {type(exc).__name__}: {exc}")
             return None
 
     return None

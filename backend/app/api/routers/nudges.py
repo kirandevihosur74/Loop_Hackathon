@@ -10,7 +10,10 @@ from sqlmodel import Session, select
 
 from ...data.models import CreditEvent, Household, Nudge, NudgeStatus, Outcome
 from ...data.store import get_session
+from ...obs import get_logger, metrics
 from ...schemas import OutcomeIn
+
+log = get_logger("nudges")
 
 router = APIRouter(prefix="/nudges", tags=["nudges"])
 
@@ -75,4 +78,9 @@ def report_outcome(
     else:
         session.commit()
 
+    metrics.inc(f"nudges.{nudge.status.value}")
+    log.info(
+        f"outcome nudge={nudge.id} kind={nudge.kind} -> {nudge.status.value}"
+        + (f" credits=+{credit_event['amount']}" if credit_event else "")
+    )
     return {"nudge_id": nudge.id, "status": nudge.status.value, "credit_event": credit_event}

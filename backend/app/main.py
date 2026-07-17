@@ -10,16 +10,28 @@ from .data.seed import ensure_seed
 from .data.store import init_db
 from .api.routers import credits, grid, household, loop, nudges
 from .loop.scheduler import start_scheduler, stop_scheduler
+from .obs import get_logger, metrics, request_middleware, setup_logging
+
+setup_logging()
+log = get_logger("main")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
-    ensure_seed()
-    if get_settings().enable_scheduler:
+    hid = ensure_seed()
+    settings = get_settings()
+    log.info(
+        f"startup household={hid} brain={'claude' if settings.anthropic_api_key else 'mock'} "
+        f"base_url={'gateway' if settings.anthropic_base_url else 'anthropic'} "
+        f"mock_data={settings.use_mock_data} nexla={'on' if settings.nexla_service_key and settings.nexla_nexset_id else 'off'} "
+        f"scheduler={settings.enable_scheduler}"
+    )
+    if settings.enable_scheduler:
         start_scheduler()
     yield
     stop_scheduler()
+    log.info("shutdown")
 
 
 app = FastAPI(title="Loop — Fitness Tracker for Your House", version="0.1.0", lifespan=lifespan)
@@ -31,6 +43,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Request logging + per-route metrics (see app/obs.py; GET /metrics to read).
+app.middleware("http")(request_middleware)
 
 app.include_router(household.router)
 app.include_router(nudges.router)
@@ -55,3 +70,15 @@ def health() -> dict:
         "data_source": data_source,
         "scheduler": settings.enable_scheduler,
     }
+
+
+@app.get("/metrics", tags=["meta"])
+def get_metrics() -> dict:
+    """In-process counters + timings: per-route latency, loop stages, ingest sources."""
+    return metrics.snapshot()
+
+
+@app.post("/metrics/reset", tags=["meta"])
+def reset_metrics() -> dict:
+    metrics.reset()
+    return {"reset": True}
