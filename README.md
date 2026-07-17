@@ -22,9 +22,9 @@ they integrate against the contract endpoints below.
 
 ## Sponsors
 
-- **Nexla** — data ingestion. Live grid prices flow through a Nexla pipeline; the agent reads them back every cycle.
-- **Akash** — hosting. The backend runs as a container on Akash's decentralized cloud (~$5/month).
-- **Zero.xyz** — SMS delivery. The agent sends nudges as texts through Zero's tool network, paying per call in USDC — no API keys needed.
+- **Nexla** — our data ingestion layer. Live grid readings flow through a real Nexla pipeline (webhook source → nexset), and the agent reads its world-state back out of Nexla's API every cycle.
+- **Akash** — our cloud. The backend runs as a container on Akash's decentralized compute marketplace (~$5/month) instead of AWS, deployed from a public image with one manifest.
+- **Zero.xyz** — the agent's hands. When a nudge is worth sending as a text message, the agent uses Zero's tool network to discover and call an SMS service, paying per call in USDC — no API keys, no Twilio account.
 
 ---
 
