@@ -82,8 +82,6 @@ cd backend && PYTHONPATH=. .venv/bin/python -m pytest -q
 
 ## Sponsors
 
-- **Nexla** — prompt-built data pipelines (Express) + Agent CLI ingest → `nexla/`.
-- **Zero.xyz** — nudge **delivery**: agent tool layer sends the top nudge as SMS (`zero fetch`, USDC on Base) → `backend/app/notify/`. Off + dry-run by default.
-- **Akash** — decentralized cloud **deploy** target → `deploy/` (SDL manifest; optional `console-axi` self-deploy). $25 credit `AKASHLOOP25`.
-
-See [`NOTES.md`](NOTES.md) for the full data-flow + sponsor map.
+- **Nexla** — our data ingestion layer. Live grid readings flow through a real Nexla pipeline (webhook source → nexset), and the agent reads its world-state back out of Nexla's API every cycle.
+- **Akash** — our cloud. The backend runs as a container on Akash's decentralized compute marketplace (~$5/month) instead of AWS, deployed from a public image with one manifest.
+- **Zero.xyz** — the agent's hands. When a nudge is worth sending as a text message, the agent uses Zero's tool network to discover and call an SMS service, paying per call in USDC — no API keys, no Twilio account.
