@@ -5,7 +5,7 @@ version: "2.0"
 
 services:
   web:
-    image: docker.io/YOURUSER/loop-backend:latest   # <-- push your image, then set this
+    image: ghcr.io/kirandevihosur74/loop-backend:v2   # amd64, public GHCR image (live)
     env:
       - USE_MOCK_DATA=false
       # - ANTHROPIC_API_KEY=...   # WARNING: SDL is public on-chain. Prefer injecting

@@ -1,6 +1,9 @@
 # Container for the loop backend — build from the REPO ROOT:
 #   docker build -t <you>/loop-backend:latest -f deploy/Dockerfile .
-FROM python:3.13-slim
+# Akash provider nodes are x86_64 — pin amd64 so an arm64 Mac build still runs there
+# (avoids "exec format error"). For an explicit cross-build:
+#   docker buildx build --platform linux/amd64 ... --push
+FROM --platform=linux/amd64 python:3.13-slim
 
 WORKDIR /app
 ENV PYTHONUNBUFFERED=1 \
