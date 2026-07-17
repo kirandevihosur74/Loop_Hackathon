@@ -1,26 +1,54 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import {
+  animate,
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  useTransform,
+} from "framer-motion";
 import type { AdviceItem } from "@/lib/types";
 import { getAdviceForDate, toggleAdvice } from "@/lib/data";
 import { cn } from "@/lib/cn";
 import { Card } from "@/components/ui";
-import { noMotion, staggerContainer, staggerRow, springSoft } from "@/lib/motion";
+import { ease, noMotion, staggerContainer, staggerRow, springSoft } from "@/lib/motion";
 import { usd, weekdayLong } from "./dateUtils";
 
-function CheckMark() {
+/** The tick: strokes itself on when `done` flips, retracts when unchecked. */
+function CheckMark({ done, reduce }: { done: boolean; reduce: boolean }) {
   return (
     <svg viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="none" aria-hidden="true">
-      <path
+      <motion.path
         d="M4 10.5l4 4 8-9"
         stroke="currentColor"
         strokeWidth="2.4"
         strokeLinecap="round"
         strokeLinejoin="round"
+        initial={false}
+        animate={{ pathLength: done ? 1 : 0 }}
+        transition={reduce ? { duration: 0 } : springSoft}
       />
     </svg>
   );
+}
+
+/** A USD figure that rolls up to its new target (e.g. as savings are captured). */
+function UsdCountUp({ value, reduce }: { value: number; reduce: boolean }) {
+  const mv = useMotionValue(value);
+  const text = useTransform(mv, (v) => usd(v));
+
+  useEffect(() => {
+    if (reduce) {
+      mv.set(value);
+      return;
+    }
+    const controls = animate(mv, value, { duration: 0.6, ease });
+    return controls.stop;
+  }, [value, reduce, mv]);
+
+  if (reduce) return <>{usd(value)}</>;
+  return <motion.span>{text}</motion.span>;
 }
 
 type AdviceChecklistProps = {
@@ -91,11 +119,17 @@ export function AdviceChecklist({ date, today }: AdviceChecklistProps) {
         {totalPotential > 0 ? (
           <>
             Save up to{" "}
-            <span className="font-bold text-gold-deep">{usd(totalPotential)}</span> today
+            <span className="font-bold text-gold-deep tabular-nums">
+              <UsdCountUp value={totalPotential} reduce={!!reduce} />
+            </span>{" "}
+            today
             {captured > 0 && (
               <>
                 {" · "}
-                <span className="font-bold text-gold-deep">{usd(captured)}</span> captured
+                <span className="font-bold text-gold-deep tabular-nums">
+                  <UsdCountUp value={captured} reduce={!!reduce} />
+                </span>{" "}
+                captured
               </>
             )}
           </>
@@ -141,16 +175,23 @@ export function AdviceChecklist({ date, today }: AdviceChecklistProps) {
                       : "border-line bg-card text-transparent",
                   )}
                 >
-                  <CheckMark />
+                  <CheckMark done={item.done} reduce={!!reduce} />
                 </motion.span>
 
                 <span
                   className={cn(
-                    "flex-1 text-sm transition-colors",
-                    item.done ? "text-sub line-through" : "text-ink",
+                    "relative flex-1 text-sm transition-colors",
+                    item.done ? "text-sub" : "text-ink",
                   )}
                 >
                   {item.text}
+                  <motion.span
+                    aria-hidden="true"
+                    initial={false}
+                    animate={{ scaleX: item.done ? 1 : 0 }}
+                    transition={reduce ? { duration: 0 } : springSoft}
+                    className="pointer-events-none absolute left-0 top-1/2 h-px w-full origin-left -translate-y-1/2 bg-current"
+                  />
                 </span>
 
                 {item.savingsUsd != null && (

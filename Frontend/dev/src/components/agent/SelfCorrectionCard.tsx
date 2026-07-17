@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import type { Nudge } from "@/lib/types";
 import { ConfidenceBadge } from "@/components/ui";
-import { ease, enter, noMotion } from "@/lib/motion";
+import { ease, enter, noMotion, springSoft } from "@/lib/motion";
 import { cn } from "@/lib/cn";
 
 /**
@@ -78,7 +78,14 @@ export function SelfCorrectionCard({
             className="flex items-start justify-between gap-3"
           >
             <p className="text-sm font-semibold text-ink">{corrected.title}</p>
-            <ConfidenceBadge level={corrected.confidence} className="shrink-0" />
+            <motion.span
+              className="shrink-0"
+              initial={reduce ? false : { scale: 0.7, opacity: 0 }}
+              animate={reduce ? undefined : { scale: 1, opacity: 1 }}
+              transition={{ ...springSoft, delay: 0.18 }}
+            >
+              <ConfidenceBadge level={corrected.confidence} />
+            </motion.span>
           </motion.div>
         )}
       </div>

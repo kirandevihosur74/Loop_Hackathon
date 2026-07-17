@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { useRef } from "react";
+import { motion, useReducedMotion, useInView } from "framer-motion";
 import type { SplitUsage } from "@/lib/types";
 import { cssVar } from "@/lib/tokens";
 import { ease } from "@/lib/motion";
@@ -11,12 +12,14 @@ function MiniRing({
   fraction,
   stroke,
   track,
+  inView,
 }: {
   label: string;
   usage: SplitUsage;
   fraction: number;
   stroke: string;
   track: string;
+  inView: boolean;
 }) {
   const reduce = useReducedMotion();
   const size = 108;
@@ -49,8 +52,10 @@ function MiniRing({
           strokeLinecap="round"
           strokeDasharray={circumference}
           transform={`rotate(-90 ${c} ${c})`}
-          initial={{ strokeDashoffset: reduce ? offset : circumference }}
-          animate={{ strokeDashoffset: offset }}
+          initial={false}
+          animate={{
+            strokeDashoffset: reduce ? offset : inView ? offset : circumference,
+          }}
           transition={reduce ? { duration: 0 } : { duration: 0.9, ease }}
         />
         <text x={c} y={c + 5} textAnchor="middle" fontSize="22" fontWeight="700" fill={cssVar.ink}>
@@ -65,17 +70,20 @@ function MiniRing({
   );
 }
 
-/** Two mini rings — Home vs Car — each sized to its share of total energy. */
+/** Two mini rings — Home vs Car — each sweeping to its share of total energy on view. */
 export function SplitRings({ home, car }: { home: SplitUsage; car: SplitUsage }) {
   const total = home.kwh + car.kwh || 1;
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, amount: 0.5 });
   return (
-    <div className="flex items-start gap-4">
+    <div ref={ref} className="flex items-start gap-4">
       <MiniRing
         label="Home"
         usage={home}
         fraction={home.kwh / total}
         stroke={cssVar.gold}
         track={cssVar.goldTint}
+        inView={inView}
       />
       <MiniRing
         label="Car"
@@ -83,6 +91,7 @@ export function SplitRings({ home, car }: { home: SplitUsage; car: SplitUsage })
         fraction={car.kwh / total}
         stroke={cssVar.medium}
         track="var(--medium-l)"
+        inView={inView}
       />
     </div>
   );

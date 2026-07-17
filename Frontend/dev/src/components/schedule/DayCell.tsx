@@ -38,7 +38,7 @@ export function DayCell({ forecast, selected, isToday, onSelect, variant }: DayC
         )}${isToday ? ", today" : ""}`}
         onClick={() => onSelect(forecast.date)}
         className={cn(
-          "flex min-h-[76px] w-[52px] shrink-0 flex-col items-center justify-between rounded-md px-1.5 py-2 shadow-soft transition-colors",
+          "flex min-h-[76px] w-[52px] shrink-0 flex-col items-center justify-between rounded-md px-1.5 py-2 shadow-soft transition active:scale-[0.97]",
           selected
             ? "bg-gold-tint ring-2 ring-gold"
             : "bg-card ring-1 ring-line hover:ring-gold",
@@ -86,7 +86,7 @@ export function DayCell({ forecast, selected, isToday, onSelect, variant }: DayC
       )}${isToday ? ", today" : ""}`}
       onClick={() => onSelect(forecast.date)}
       className={cn(
-        "flex min-h-[44px] flex-col items-center justify-center gap-1 rounded-md py-1.5 transition-colors",
+        "flex min-h-[44px] w-full flex-col items-center justify-center gap-1 rounded-md py-1.5 transition active:scale-[0.97]",
         selected
           ? "bg-gold-tint ring-2 ring-gold"
           : "bg-card ring-1 ring-line hover:ring-gold",

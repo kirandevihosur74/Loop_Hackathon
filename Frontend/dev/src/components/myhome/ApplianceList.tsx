@@ -1,11 +1,27 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import type { Variants } from "framer-motion";
 import { Card } from "@/components/ui";
 import { cn } from "@/lib/cn";
-import { enter, noMotion } from "@/lib/motion";
+import { ease, noMotion } from "@/lib/motion";
 import type { Appliance, ApplianceType } from "@/lib/types";
 import { TypeIcon } from "./icons";
+
+/**
+ * Rows fade + rise in. `custom` carries the row's index so the initial batch
+ * staggers on mount, while a freshly prepended row (index 0) enters instantly
+ * and satisfyingly at the top. Existing rows are keyed, so they never re-run
+ * their enter when the list changes.
+ */
+const rowVariants: Variants = {
+  hidden: { opacity: 0, y: 8 },
+  show: (i: number = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.3, ease, delay: Math.min(i, 8) * 0.05 },
+  }),
+};
 
 const TYPE_LABEL: Record<ApplianceType, string> = {
   ev: "EV",
@@ -48,7 +64,7 @@ export function ApplianceList({
   onDelete: (id: string) => void;
 }) {
   const reduce = useReducedMotion();
-  const variants = reduce ? noMotion : enter;
+  const variants = reduce ? noMotion : rowVariants;
 
   if (appliances.length === 0) {
     return (
@@ -60,15 +76,22 @@ export function ApplianceList({
 
   return (
     <ul className="flex flex-col gap-2">
-      <AnimatePresence initial={false}>
-        {appliances.map((a) => (
+      {/* No `initial={false}`: the first batch animates in (staggered by index),
+          while later prepends/deletes animate individually. */}
+      <AnimatePresence>
+        {appliances.map((a, i) => (
           <motion.li
             key={a.id}
             layout={!reduce}
+            custom={i}
             variants={variants}
             initial="hidden"
             animate="show"
-            exit={reduce ? { opacity: 0 } : { opacity: 0, height: 0, marginTop: 0 }}
+            exit={
+              reduce
+                ? { opacity: 0 }
+                : { opacity: 0, height: 0, marginTop: 0, transition: { duration: 0.24, ease } }
+            }
           >
             <Card className="flex items-center gap-3 p-3">
               <span

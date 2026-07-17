@@ -10,7 +10,9 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import type { PricePoint } from "@/lib/types";
+import { ease } from "@/lib/motion";
 
 const DEFAULT_DATA: PricePoint[] = [
   { hour: 0, cents: 14 },
@@ -103,6 +105,7 @@ export default function PriceForecastChart({
   nowHour?: number;
   night?: boolean;
 }) {
+  const reduced = useReducedMotion();
   const svgRef = useRef<SVGSVGElement>(null);
   const pathRef = useRef<SVGPathElement>(null);
   const dragging = useRef(false);
@@ -163,12 +166,14 @@ export default function PriceForecastChart({
   const cents = centsAt(data, hour);
   const st = stateOf(cents);
 
+  // Night is now a LIGHT (cool) theme — no dark surface. Only the hero gradient,
+  // text tone and accent shift cool; the price curve + peak/cheap dots stay warm.
   const heroBg = night
-    ? "linear-gradient(180deg,#1B2A44 0%,#223354 55%,#2A3E63 100%)"
+    ? "linear-gradient(180deg,#EAF2F7 0%,#DCEAF2 55%,#CDE0EC 100%)"
     : "linear-gradient(180deg,#FDF3E0 0%,#FBE7C4 55%,#F7D9A6 100%)";
-  const ink = night ? "#F1EFEA" : "#2A2620";
-  const sub = night ? "#9BA6B2" : "#8C8375";
-  const goldD = night ? "#F2A63E" : "#D07E1B";
+  const ink = night ? "#23201C" : "#2A2620";
+  const sub = night ? "#7E8894" : "#8C8375";
+  const goldD = night ? "#2E6C93" : "#D07E1B";
 
   return (
     <div
@@ -297,14 +302,18 @@ export default function PriceForecastChart({
           opacity={0.8}
         />
 
-        {/* the curve */}
-        <path
+        {/* the curve — draws in left→right once on first mount (scrubbing never
+            re-triggers it: `d` is static, only the handle moves) */}
+        <motion.path
           ref={pathRef}
           d={line}
           fill="none"
           stroke="url(#pf-stroke)"
           strokeWidth={3.5}
           strokeLinecap="round"
+          initial={{ pathLength: reduced ? 1 : 0 }}
+          animate={{ pathLength: 1 }}
+          transition={reduced ? { duration: 0 } : { duration: 0.9, ease }}
         />
 
         {/* peak / cheapest dots + labels */}
@@ -331,8 +340,27 @@ export default function PriceForecastChart({
           {low.cents}¢
         </text>
 
-        {/* draggable handle */}
-        <circle cx={handle.x} cy={handle.y} r={7} fill="#fff" stroke="#EF9A31" strokeWidth={3} />
+        {/* draggable handle — softly pulses while it marks "now" (static once
+            scrubbed or under reduced motion) */}
+        <motion.circle
+          cx={handle.x}
+          cy={handle.y}
+          r={7}
+          fill="#fff"
+          stroke="#EF9A31"
+          strokeWidth={3}
+          style={{ transformBox: "fill-box", transformOrigin: "center" }}
+          animate={
+            !scrubbed && !reduced
+              ? { scale: [1, 1.15, 1], opacity: [1, 0.85, 1] }
+              : { scale: 1, opacity: 1 }
+          }
+          transition={
+            !scrubbed && !reduced
+              ? { duration: 1.8, repeat: Infinity, ease: "easeInOut" }
+              : { duration: 0 }
+          }
+        />
         <text
           x={handle.x + (handle.x > W - 40 ? -10 : 8)}
           y={handle.y - 9}

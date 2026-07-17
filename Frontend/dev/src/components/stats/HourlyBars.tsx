@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { useRef } from "react";
+import { motion, useReducedMotion, useInView } from "framer-motion";
 import type { HourUsage, GridState } from "@/lib/types";
 import { cssVar, gridLabel } from "@/lib/tokens";
 import { ease } from "@/lib/motion";
@@ -25,6 +26,8 @@ function hourLabel(h: number): string {
  */
 export function HourlyBars({ hourly }: { hourly: HourUsage[] }) {
   const reduce = useReducedMotion();
+  const ref = useRef<SVGSVGElement>(null);
+  const inView = useInView(ref, { once: true, amount: 0.4 });
 
   const width = 336;
   const chartH = 120;
@@ -50,6 +53,7 @@ export function HourlyBars({ hourly }: { hourly: HourUsage[] }) {
   return (
     <div>
       <svg
+        ref={ref}
         viewBox={`0 0 ${width} ${height}`}
         className="w-full h-auto"
         role="img"
@@ -66,9 +70,11 @@ export function HourlyBars({ hourly }: { hourly: HourUsage[] }) {
               width={barW}
               rx={2}
               fill={rampVar[h.gridState]}
-              initial={reduce ? { y, height: barH } : { y: chartH, height: 0 }}
-              animate={{ y, height: barH }}
-              transition={reduce ? { duration: 0 } : { duration: 0.5, delay: i * 0.012, ease }}
+              initial={false}
+              animate={
+                reduce || inView ? { y, height: barH } : { y: chartH, height: 0 }
+              }
+              transition={reduce ? { duration: 0 } : { duration: 0.5, delay: i * 0.02, ease }}
             >
               <title>{`${hourLabel(h.hour)} · ${h.kwh} kWh · ${gridLabel[h.gridState]}`}</title>
             </motion.rect>

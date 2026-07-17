@@ -19,24 +19,30 @@
   Keep this file and src/lib/tokens.ts (raw hex for hand-rolled SVG) in sync.
 */
 
+/*
+  BOTH modes are LIGHT (white cards, near-white bg). Only the brand ACCENT
+  (--gold*), the hero gradient (--hero*), and the sun/moon icon shift cool at
+  night. The price heat-ramp (--cheap/--medium/--peak) stays WARM and IDENTICAL
+  in both modes because it carries time-of-use meaning.
+*/
 :root {
-  /* surfaces */
-  --bg: #fbf7f0;
+  /* surfaces — DAY (light) */
+  --bg: #fbf9f6;
   --card: #ffffff;
   --card-elevated: #ffffff;
   --nav: #ffffff;
 
   /* text + lines */
-  --ink: #2a2620;
+  --ink: #23201c;
   --sub: #8c8375;
-  --line: #efe7da;
+  --line: #ece8e2;
 
-  /* brand gold */
+  /* brand accent — WARM by day */
   --gold: #ef9a31;
   --gold-d: #d07e1b;
   --gold-l: #fcebcf;
 
-  /* price heat-ramp (time-of-use meaning, warm by day) */
+  /* price heat-ramp — FIXED warm (identical in both modes) */
   --cheap: #f6c544;
   --cheap-l: #fcefc7;
   --medium: #ec8b2e;
@@ -44,7 +50,7 @@
   --peak: #c24b2e;
   --peak-l: #f6e0d6;
 
-  /* home hero sky (warm, day) */
+  /* home hero sky — WARM, day */
   --hero-1: #fdf3e0;
   --hero-2: #fbe7c4;
   --hero-3: #f7d9a6;
@@ -55,35 +61,36 @@
 }
 
 html.night {
-  --bg: #14171c;
-  --card: #1e232b;
-  --card-elevated: #262d37;
-  --nav: #1a1f26;
+  /* surfaces — NIGHT (still light/white) */
+  --bg: #f5f8fa;
+  --card: #ffffff;
+  --card-elevated: #ffffff;
+  --nav: #ffffff;
 
-  --ink: #f1efea;
-  --sub: #9ba6b2;
-  --line: #2c333d;
+  --ink: #23201c;
+  --sub: #7e8894;
+  --line: #e6eaee;
 
-  /* gold pops on dark; deep collapses to the bright gold for contrast */
-  --gold: #f2a63e;
-  --gold-d: #f2a63e;
-  --gold-l: rgba(242, 166, 62, 0.14);
+  /* brand accent — COOL teal-blue by night */
+  --gold: #3e86b5;
+  --gold-d: #2e6c93;
+  --gold-l: #e3eff4;
 
-  /* price ramp stays meaningful, slightly brighter peak on dark */
+  /* price heat-ramp — unchanged, still warm */
   --cheap: #f6c544;
-  --cheap-l: rgba(246, 197, 68, 0.16);
+  --cheap-l: #fcefc7;
   --medium: #ec8b2e;
-  --medium-l: rgba(236, 139, 46, 0.16);
-  --peak: #d25a3e;
-  --peak-l: rgba(210, 90, 62, 0.18);
+  --medium-l: #fbe7cf;
+  --peak: #c24b2e;
+  --peak-l: #f6e0d6;
 
-  /* home hero sky (cool, night) */
-  --hero-1: #1b2a44;
-  --hero-2: #223354;
-  --hero-3: #2a3e63;
+  /* home hero sky — COOL, night */
+  --hero-1: #eaf2f7;
+  --hero-2: #dceaf2;
+  --hero-3: #cde0ec;
 
-  --shadow-color: rgba(0, 0, 0, 0.4);
-  --shadow-color-strong: rgba(0, 0, 0, 0.5);
+  --shadow-color: rgba(0, 0, 0, 0.05);
+  --shadow-color-strong: rgba(0, 0, 0, 0.08);
 }
 
 @theme inline {

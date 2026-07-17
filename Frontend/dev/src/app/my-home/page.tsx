@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { Pill, SectionHeader } from "@/components/ui";
 import { Screen } from "@/components/layout/Screen";
+import { enter, noMotion } from "@/lib/motion";
 import { getAppliances, deleteAppliance } from "@/lib/data";
 import type { Appliance, ApplianceType } from "@/lib/types";
 import {
@@ -35,6 +37,8 @@ const FILTERS: { value: Filter; label: string }[] = [
 export default function MyHomePage() {
   const [appliances, setAppliances] = useState<Appliance[] | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
+  const reduce = useReducedMotion();
+  const fade = reduce ? noMotion : enter;
 
   useEffect(() => {
     let alive = true;
@@ -73,12 +77,12 @@ export default function MyHomePage() {
 
   return (
     <Screen className="pb-8">
-      <header className="mb-4">
+      <motion.header className="mb-4" variants={fade} initial="hidden" animate="show">
         <h1 className="text-2xl font-bold tracking-tight text-ink">My Home</h1>
         <p className="mt-0.5 text-sm text-sub">
           The appliances the agent plans around. Add what you have — it does the rest.
         </p>
-      </header>
+      </motion.header>
 
       {/* Scan (primary) + Upload photo + Import bill — equal-width row.
           Stacks to full-width on very small screens. Panels render below the row. */}
@@ -119,7 +123,12 @@ export default function MyHomePage() {
         <SectionHeader title="Your appliances" />
 
         {/* Filter chips */}
-        <div className="-mx-4 mb-3 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <motion.div
+          className="-mx-4 mb-3 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          variants={fade}
+          initial="hidden"
+          animate="show"
+        >
           <div className="flex w-max gap-2">
             {FILTERS.map((f) => (
               <Pill
@@ -131,7 +140,7 @@ export default function MyHomePage() {
               </Pill>
             ))}
           </div>
-        </div>
+        </motion.div>
 
         {appliances === null ? (
           <ApplianceListSkeleton />

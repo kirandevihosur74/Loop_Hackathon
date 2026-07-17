@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { AgentCheck } from "@/lib/types";
-import { ease, noMotion, staggerRow } from "@/lib/motion";
+import { ease, noMotion, springSoft, staggerRow } from "@/lib/motion";
 import { cssVar } from "@/lib/tokens";
 
 export type CheckPhase = "checking" | "done";
@@ -47,11 +47,17 @@ function Spinner({ reduce }: { reduce: boolean }) {
   );
 }
 
-/** Gold tick once a check has resolved. */
-function CheckIcon() {
+/** Gold tick once a check has resolved — pops in with a soft spring as the
+ *  spinning ring settles. Reduced motion: appears instantly, no pop. */
+function CheckIcon({ reduce }: { reduce: boolean }) {
   return (
-    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-gold text-white">
-      <svg
+    <motion.span
+      className="flex h-4 w-4 items-center justify-center rounded-full bg-gold text-white"
+      initial={reduce ? false : { scale: 0.4, opacity: 0 }}
+      animate={reduce ? undefined : { scale: 1, opacity: 1 }}
+      transition={springSoft}
+    >
+      <motion.svg
         viewBox="0 0 12 12"
         className="h-2.5 w-2.5"
         fill="none"
@@ -61,9 +67,14 @@ function CheckIcon() {
         strokeLinejoin="round"
         aria-hidden
       >
-        <path d="M2.5 6.2l2.2 2.2 4.8-5" />
-      </svg>
-    </span>
+        <motion.path
+          d="M2.5 6.2l2.2 2.2 4.8-5"
+          initial={reduce ? false : { pathLength: 0 }}
+          animate={reduce ? undefined : { pathLength: 1 }}
+          transition={{ duration: 0.28, ease, delay: 0.08 }}
+        />
+      </motion.svg>
+    </motion.span>
   );
 }
 
@@ -101,15 +112,15 @@ export function CheckStream({
               className="flex items-start gap-3 rounded-md bg-card p-3 shadow-soft ring-1 ring-line"
             >
               <span className="mt-0.5 shrink-0" aria-hidden>
-                {done ? <CheckIcon /> : <Spinner reduce={!!reduce} />}
+                {done ? <CheckIcon reduce={!!reduce} /> : <Spinner reduce={!!reduce} />}
               </span>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-ink">{c.label}</p>
                 {done && (
                   <motion.p
-                    initial={reduce ? undefined : { opacity: 0 }}
-                    animate={reduce ? undefined : { opacity: 1 }}
-                    transition={{ duration: 0.3, ease }}
+                    initial={reduce ? undefined : { opacity: 0, y: -2 }}
+                    animate={reduce ? undefined : { opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, ease, delay: 0.06 }}
                     className="mt-0.5 text-sm text-sub"
                   >
                     {c.finding}

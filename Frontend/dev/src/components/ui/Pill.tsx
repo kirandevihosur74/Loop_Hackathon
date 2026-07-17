@@ -6,8 +6,8 @@ type PillProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 /**
- * A small rounded toggle chip — used for filter chips and range toggles.
- * Active state uses green (selected/good); inactive is neutral gray.
+ * A small rounded toggle chip — filter chips and range toggles. Active uses the
+ * brand accent; inactive is neutral. Subtle press feedback (scale 0.97).
  */
 export function Pill({ active = false, className, children, ...props }: PillProps) {
   return (
@@ -15,7 +15,7 @@ export function Pill({ active = false, className, children, ...props }: PillProp
       type="button"
       aria-pressed={active}
       className={cn(
-        "inline-flex min-h-[36px] items-center gap-1.5 rounded-md px-3.5 py-1.5 text-sm font-semibold whitespace-nowrap transition-colors",
+        "inline-flex min-h-[36px] items-center gap-1.5 rounded-md px-3.5 py-1.5 text-sm font-semibold whitespace-nowrap transition-[transform,color,background-color] duration-150 active:scale-[0.97]",
         active
           ? "bg-gold text-white shadow-soft"
           : "bg-card text-sub ring-1 ring-line hover:text-ink",

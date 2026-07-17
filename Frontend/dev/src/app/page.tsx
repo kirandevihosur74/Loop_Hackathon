@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { getPriceForecast, getLiveUsage, getCurrentNudge } from "@/lib/data";
 import type { Nudge, PricePoint } from "@/lib/types";
 import { HomeHero } from "@/components/home/HomeHero";
 import { NudgeCard } from "@/components/home/NudgeCard";
+import { enter, staggerContainer, noMotion } from "@/lib/motion";
 
 interface HomeData {
   forecast: PricePoint[];
@@ -14,6 +16,7 @@ interface HomeData {
 }
 
 export default function HomePage() {
+  const reduced = useReducedMotion();
   const [data, setData] = useState<HomeData | null>(null);
 
   useEffect(() => {
@@ -34,12 +37,17 @@ export default function HomePage() {
 
   if (!data) return <HomeSkeleton />;
 
+  const container = reduced ? noMotion : staggerContainer;
+  const item = reduced ? noMotion : enter;
+
   return (
-    <main className="pb-4">
-      <HomeHero forecast={data.forecast} nowHour={data.nowHour} />
+    <motion.main className="pb-4" variants={container} initial="hidden" animate="show">
+      <motion.div variants={item}>
+        <HomeHero forecast={data.forecast} nowHour={data.nowHour} />
+      </motion.div>
 
       {/* Running now */}
-      <div className="mt-3 flex items-center gap-2.5 px-4">
+      <motion.div variants={item} className="mt-3 flex items-center gap-2.5 px-4">
         <span
           className="h-2 w-2 rounded-full bg-gold"
           style={{ boxShadow: "0 0 0 4px var(--gold-l)" }}
@@ -49,17 +57,17 @@ export default function HomePage() {
         <span className="ml-auto text-[15px] font-bold tabular-nums text-ink">
           {data.watts.toLocaleString()} W
         </span>
-      </div>
+      </motion.div>
 
       {/* The one thing to act on */}
-      <div className="mt-3 px-3.5">
+      <motion.div variants={item} className="mt-3 px-3.5">
         {data.nudge ? (
           <NudgeCard nudge={data.nudge} />
         ) : (
           <p className="py-6 text-center text-sm text-sub">All quiet — nothing needs you right now.</p>
         )}
-      </div>
-    </main>
+      </motion.div>
+    </motion.main>
   );
 }
 

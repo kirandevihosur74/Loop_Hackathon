@@ -1,21 +1,25 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { useRef } from "react";
+import { motion, useReducedMotion, useInView } from "framer-motion";
 import type { ApplianceUsage } from "@/lib/types";
 import { cssVar } from "@/lib/tokens";
 import { ease } from "@/lib/motion";
 
 /**
  * "Where your watts go" — one horizontal bar per appliance category, sized by kWh,
- * labelled with its name and the dollars it cost.
+ * labelled with its name and the dollars it cost. Each bar fills its width
+ * (0 → target), staggered, when the list scrolls into view.
  */
 export function ApplianceBars({ items }: { items: ApplianceUsage[] }) {
   const reduce = useReducedMotion();
+  const ref = useRef<HTMLUListElement>(null);
+  const inView = useInView(ref, { once: true, amount: 0.3 });
   const maxKwh = Math.max(...items.map((a) => a.kwh), 0.1);
 
   return (
-    <ul className="flex flex-col gap-3">
-      {items.map((a) => {
+    <ul ref={ref} className="flex flex-col gap-3">
+      {items.map((a, i) => {
         const pct = (a.kwh / maxKwh) * 100;
         return (
           <li key={a.name}>
@@ -35,9 +39,11 @@ export function ApplianceBars({ items }: { items: ApplianceUsage[] }) {
               <motion.div
                 className="h-full rounded-sm"
                 style={{ backgroundColor: cssVar.gold }}
-                initial={reduce ? { width: `${pct}%` } : { width: 0 }}
-                animate={{ width: `${pct}%` }}
-                transition={reduce ? { duration: 0 } : { duration: 0.7, ease }}
+                initial={false}
+                animate={{ width: reduce || inView ? `${pct}%` : 0 }}
+                transition={
+                  reduce ? { duration: 0 } : { duration: 0.7, delay: i * 0.08, ease }
+                }
               />
             </div>
           </li>

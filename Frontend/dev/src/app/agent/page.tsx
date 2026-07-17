@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
+import { enter, noMotion } from "@/lib/motion";
 import { Screen } from "@/components/layout/Screen";
 import { Card, ConfidenceBadge, PrimaryButton } from "@/components/ui";
 import { getLedger, runAgentCheck } from "@/lib/data";
@@ -163,13 +164,15 @@ export default function AgentPage() {
 
           {/* Fallback: if the agent didn't self-correct, surface the final rec. */}
           {checksDone && !run.selfCorrected && (
-            <Card className="bg-gold-tint">
-              <div className="flex items-start justify-between gap-3">
-                <p className="text-sm font-semibold text-ink">{run.result.title}</p>
-                <ConfidenceBadge level={run.result.confidence} className="shrink-0" />
-              </div>
-              <p className="mt-1 text-xs text-sub">{run.result.detail}</p>
-            </Card>
+            <motion.div variants={reduce ? noMotion : enter} initial="hidden" animate="show">
+              <Card className="bg-gold-tint">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-sm font-semibold text-ink">{run.result.title}</p>
+                  <ConfidenceBadge level={run.result.confidence} className="shrink-0" />
+                </div>
+                <p className="mt-1 text-xs text-sub">{run.result.detail}</p>
+              </Card>
+            </motion.div>
           )}
         </div>
       )}
