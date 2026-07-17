@@ -229,3 +229,18 @@ export async function addAppliance(a: Omit<Appliance, "id">): Promise<Appliance>
 export async function deleteAppliance(id: string): Promise<void> {
   await api(`/household/${HOUSEHOLD}/appliances/${id}`, { method: "DELETE" });
 }
+
+/** Devices a "camera scan" can detect — rotates through the pool, persists via the backend. */
+const SCAN_POOL: Omit<Appliance, "id">[] = [
+  { name: "Nest Thermostat", type: "hvac", kw: 0.005 },
+  { name: "Samsung Fridge", type: "kitchen", kw: 0.15 },
+  { name: "PS5", type: "electronics", kw: 0.2 },
+  { name: "Rivian R1T", type: "ev", kw: 11.5 },
+  { name: "Miele Oven", type: "kitchen", kw: 3.6 },
+];
+let scanIdx = 0;
+
+export async function scanAppliance(): Promise<Appliance> {
+  const pick = SCAN_POOL[scanIdx++ % SCAN_POOL.length];
+  return addAppliance(pick); // real POST — survives reload, agent plans around it
+}

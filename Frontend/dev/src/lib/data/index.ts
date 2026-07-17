@@ -106,9 +106,9 @@ export async function addAppliance(a: Omit<Appliance, "id">): Promise<Appliance>
   );
 }
 
-/** Simulate a camera/QR scan that detects and adds an appliance. */
+/** Simulate a camera/QR scan that detects and adds an appliance (persists via backend). */
 export async function scanAppliance(): Promise<Appliance> {
-  return mock.scanAppliance();
+  return live(api.scanAppliance, mock.scanAppliance);
 }
 
 /** Remove an appliance by id. */
