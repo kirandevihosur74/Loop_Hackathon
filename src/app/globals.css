@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+/*
+  Loop — design tokens (Tailwind v4, CSS-first).
+  Semantic color vocabulary is STRICT: nothing gets a color outside this scale,
+  or the colors stop meaning things.
+    green  = resolved / cheap / clean / good
+    amber  = in-progress / medium / needs-you
+    red    = needs attention / expensive / peak
+    gray   = neutral / upcoming / disabled
+  Keep this file and src/lib/tokens.ts (raw hex for hand-rolled SVG) in sync.
+*/
+
+@theme inline {
+  /* ---- semantic colors ---- */
+  --color-green: #4e8c57;
+  --color-green-light: #e4f0e6;
+  --color-green-deep: #3c6e44;
+
+  --color-amber: #c88a22;
+  --color-amber-light: #f6ecd6;
+
+  --color-red: #c2544b;
+  --color-red-light: #f5e1de;
+
+  --color-ink: #23272b; /* primary text */
+  --color-sub: #7c858c; /* secondary text */
+  --color-line: #e9edea; /* hairlines / borders */
+
+  /* ---- surfaces ---- */
+  --color-bg: #eef2ef;
+  --color-card: #ffffff;
+
+  /* ---- radii ---- */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-pill: 999px;
+
+  /* ---- soft shadows ---- */
+  --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.06);
+  --shadow-lift: 0 8px 28px rgba(0, 0, 0, 0.1);
+
+  /* ---- type ---- */
+  --font-sans:
+    -apple-system, "SF Pro Display", "SF Pro Text", system-ui, BlinkMacSystemFont, "Segoe UI",
+    Roboto, sans-serif;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  /* Neutral surface behind the phone frame so it reads as an app on desktop. */
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Calm, consistent focus ring on interactive elements. */
+:focus-visible {
+  outline: 2px solid var(--color-green);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Horizontal strips scroll without visible scrollbars. */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Respect reduced-motion — kill non-essential animation globally. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
