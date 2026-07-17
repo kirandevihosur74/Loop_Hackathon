@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .config import get_settings
 from .data.seed import ensure_seed
 from .data.store import init_db
-from .api.routers import credits, household, loop, nudges
+from .api.routers import credits, grid, household, loop, nudges
 from .loop.scheduler import start_scheduler, stop_scheduler
 
 
@@ -36,6 +36,7 @@ app.include_router(household.router)
 app.include_router(nudges.router)
 app.include_router(credits.router)
 app.include_router(loop.router)
+app.include_router(grid.router)
 
 
 @app.get("/health", tags=["meta"])

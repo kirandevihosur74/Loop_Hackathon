@@ -20,7 +20,22 @@ import type {
   StatsSummary,
   UsagePoint,
 } from "@/lib/types";
+import * as api from "./api";
 import * as mock from "./mock";
+
+/**
+ * Live-backend functions call the FastAPI loop backend (NEXT_PUBLIC_API_BASE,
+ * default http://localhost:8000) and fall back to the mock if it's unreachable —
+ * the demo never renders a blank screen. Functions with no backend equivalent yet
+ * (usage curves, forecasts, stats, advice) stay on the mock.
+ */
+async function live<T>(real: () => Promise<T>, fallback: () => Promise<T>): Promise<T> {
+  try {
+    return await real();
+  } catch {
+    return fallback();
+  }
+}
 
 /** Live household usage — last ~2h, ~one point per minute. */
 export async function getLiveUsage(): Promise<UsagePoint[]> {
@@ -29,12 +44,12 @@ export async function getLiveUsage(): Promise<UsagePoint[]> {
 
 /** The single nudge to surface on Home right now (or null if nothing to act on). */
 export async function getCurrentNudge(): Promise<Nudge | null> {
-  return mock.getCurrentNudge();
+  return live(api.getCurrentNudge, mock.getCurrentNudge);
 }
 
 /** Current grid price state + rate in cents/kWh. */
 export async function getGridState(): Promise<{ state: GridState; priceCents: number }> {
-  return mock.getGridState();
+  return live(api.getGridState, mock.getGridState);
 }
 
 /** 7-day forward forecast (one entry per day). */
@@ -64,22 +79,25 @@ export async function getStats(range: "day" | "week" | "month"): Promise<StatsSu
 
 /** Run one agent check — returns the streamed checklist, a result, and an optional self-correction. */
 export async function runAgentCheck(): Promise<AgentRunResult> {
-  return mock.runAgentCheck();
+  return live(api.runAgentCheck, mock.runAgentCheck);
 }
 
 /** The trust ledger — actions the agent took on its own. */
 export async function getLedger(): Promise<LedgerEntry[]> {
-  return mock.getLedger();
+  return live(api.getLedger, mock.getLedger);
 }
 
 /** All registered appliances. */
 export async function getAppliances(): Promise<Appliance[]> {
-  return mock.getAppliances();
+  return live(api.getAppliances, mock.getAppliances);
 }
 
 /** Add an appliance (manual entry). */
 export async function addAppliance(a: Omit<Appliance, "id">): Promise<Appliance> {
-  return mock.addAppliance(a);
+  return live(
+    () => api.addAppliance(a),
+    () => mock.addAppliance(a),
+  );
 }
 
 /** Simulate a camera/QR scan that detects and adds an appliance. */
@@ -89,7 +107,10 @@ export async function scanAppliance(): Promise<Appliance> {
 
 /** Remove an appliance by id. */
 export async function deleteAppliance(id: string): Promise<void> {
-  return mock.deleteAppliance(id);
+  return live(
+    () => api.deleteAppliance(id),
+    () => mock.deleteAppliance(id),
+  );
 }
 
 /** Import an electricity bill (PDF/image). Stub returns a canned summary. */

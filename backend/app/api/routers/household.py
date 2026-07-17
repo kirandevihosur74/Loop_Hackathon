@@ -45,3 +45,15 @@ def add_appliance(
     session.commit()
     session.refresh(appliance)
     return appliance
+
+
+@router.delete("/{household_id}/appliances/{appliance_id}")
+def delete_appliance(
+    household_id: int, appliance_id: int, session: Session = Depends(get_session)
+) -> dict:
+    appliance = session.get(Appliance, appliance_id)
+    if not appliance or appliance.household_id != household_id:
+        raise HTTPException(404, "appliance not found")
+    session.delete(appliance)
+    session.commit()
+    return {"deleted": appliance_id}
