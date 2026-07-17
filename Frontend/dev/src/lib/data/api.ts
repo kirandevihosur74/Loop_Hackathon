@@ -19,20 +19,60 @@ import type {
   LedgerEntry,
   Nudge,
 } from "@/lib/types";
+import { getApiBase, pushApiLog, summarizeBody } from "@/lib/devLog";
 
-const BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
 const HOUSEHOLD = 1;
 
 async function api<T>(path: string, init?: RequestInit & { timeoutMs?: number }): Promise<T> {
   const { timeoutMs = 4000, ...rest } = init ?? {};
-  const res = await fetch(`${BASE}${path}`, {
-    cache: "no-store",
-    signal: AbortSignal.timeout(timeoutMs),
-    ...rest,
-    headers: { "content-type": "application/json", ...(rest.headers ?? {}) },
-  });
-  if (!res.ok) throw new Error(`${path} -> HTTP ${res.status}`);
-  return res.json() as Promise<T>;
+  const method = (rest.method ?? "GET").toUpperCase();
+  const started = performance.now();
+  try {
+    const res = await fetch(`${getApiBase()}${path}`, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(timeoutMs),
+      ...rest,
+      headers: { "content-type": "application/json", ...(rest.headers ?? {}) },
+    });
+    const durationMs = Math.round(performance.now() - started);
+    if (!res.ok) {
+      pushApiLog({
+        method,
+        path,
+        status: res.status,
+        ok: false,
+        durationMs,
+        source: "error",
+        error: `HTTP ${res.status}`,
+      });
+      throw new Error(`${path} -> HTTP ${res.status}`);
+    }
+    const data = (await res.json()) as T;
+    pushApiLog({
+      method,
+      path,
+      status: res.status,
+      ok: true,
+      durationMs,
+      source: "live",
+      summary: summarizeBody(data),
+    });
+    return data;
+  } catch (err) {
+    const durationMs = Math.round(performance.now() - started);
+    // Avoid double-logging HTTP errors already recorded above.
+    if (!(err instanceof Error && /HTTP \d+/.test(err.message))) {
+      pushApiLog({
+        method,
+        path,
+        ok: false,
+        durationMs,
+        source: "error",
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+    throw err;
+  }
 }
 
 /* ---------- wire shapes (backend) ---------- */
@@ -254,18 +294,56 @@ let scanIdx = 0;
  */
 export async function scanAppliance(file?: File): Promise<Appliance> {
   if (file) {
+    const path = `/household/${HOUSEHOLD}/appliances/scan`;
     const form = new FormData();
     form.append("file", file);
+    const started = performance.now();
 
-    const res = await fetch(`${BASE}/household/${HOUSEHOLD}/appliances/scan`, {
-      method: "POST",
-      body: form,
-      cache: "no-store",
-      signal: AbortSignal.timeout(90000),
-    });
-    if (!res.ok) throw new Error(`/household/${HOUSEHOLD}/appliances/scan -> HTTP ${res.status}`);
-    const row = (await res.json()) as WireAppliance;
-    return toAppliance(row);
+    try {
+      const res = await fetch(`${getApiBase()}${path}`, {
+        method: "POST",
+        body: form,
+        cache: "no-store",
+        signal: AbortSignal.timeout(90000),
+      });
+      const durationMs = Math.round(performance.now() - started);
+      if (!res.ok) {
+        pushApiLog({
+          method: "POST",
+          path,
+          status: res.status,
+          ok: false,
+          durationMs,
+          source: "error",
+          error: `HTTP ${res.status}`,
+        });
+        throw new Error(`${path} -> HTTP ${res.status}`);
+      }
+      const row = (await res.json()) as WireAppliance;
+      pushApiLog({
+        method: "POST",
+        path,
+        status: res.status,
+        ok: true,
+        durationMs,
+        source: "live",
+        summary: summarizeBody(row),
+      });
+      return toAppliance(row);
+    } catch (err) {
+      const durationMs = Math.round(performance.now() - started);
+      if (!(err instanceof Error && /HTTP \d+/.test(err.message))) {
+        pushApiLog({
+          method: "POST",
+          path,
+          ok: false,
+          durationMs,
+          source: "error",
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+      throw err;
+    }
   }
 
   const pick = SCAN_POOL[scanIdx++ % SCAN_POOL.length];

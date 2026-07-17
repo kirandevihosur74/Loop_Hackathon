@@ -18,6 +18,7 @@ import {
   ImportBillSummary,
   useBillImport,
 } from "@/components/myhome/ImportBillCard";
+import { DeveloperSettings } from "@/components/myhome/DeveloperSettings";
 
 type Filter = ApplianceType | "all";
 
@@ -139,6 +140,9 @@ export default function MyHomePage() {
       <div className="mt-4">
         <AddApplianceForm onAdded={prepend} />
       </div>
+
+      {/* Tap "Powerfly · local build" 5× to open live API logging / base URL. */}
+      <DeveloperSettings />
     </Screen>
   );
 }

@@ -23,6 +23,7 @@ import type {
 } from "@/lib/types";
 import * as api from "./api";
 import * as mock from "./mock";
+import { getStrictLive, pushApiLog } from "@/lib/devLog";
 
 /**
  * Live-backend functions call the FastAPI loop backend (NEXT_PUBLIC_API_BASE,
@@ -30,10 +31,25 @@ import * as mock from "./mock";
  * the demo never renders a blank screen. Functions with no backend equivalent yet
  * (usage curves, forecasts, stats, advice) stay on the mock.
  */
-async function live<T>(real: () => Promise<T>, fallback: () => Promise<T>): Promise<T> {
+async function live<T>(
+  real: () => Promise<T>,
+  fallback: () => Promise<T>,
+  opts?: { label?: string; allowMockFallback?: boolean },
+): Promise<T> {
   try {
     return await real();
-  } catch {
+  } catch (err) {
+    const allow = opts?.allowMockFallback ?? true;
+    pushApiLog({
+      method: "—",
+      path: opts?.label ?? "live()",
+      ok: false,
+      durationMs: 0,
+      source: allow ? "mock-fallback" : "error",
+      error: err instanceof Error ? err.message : String(err),
+      summary: allow ? "fell back to mock" : "strict live — not falling back",
+    });
+    if (!allow) throw err;
     return fallback();
   }
 }
@@ -111,6 +127,11 @@ export async function scanAppliance(file?: File): Promise<Appliance> {
   return live(
     () => api.scanAppliance(file),
     () => mock.scanAppliance(file),
+    {
+      label: file ? "scanAppliance(photo)" : "scanAppliance()",
+      // Photo uploads should surface API failures by default (strict live).
+      allowMockFallback: file ? !getStrictLive() : true,
+    },
   );
 }
 
