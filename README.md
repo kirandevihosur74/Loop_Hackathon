@@ -10,6 +10,16 @@ they integrate against the contract endpoints below.
 
 ---
 
+## How it works
+
+- **Watches the real world** — pulls the live California grid price (CAISO via Nexla), weather, and even whether the sun is hitting your windows (SF building-shadow map).
+- **Thinks with Claude** — every cycle, the agent looks at your appliances and the current price and decides the *one thing* worth telling you right now.
+- **Nudges you** — *"Electricity is at its cheapest 5% today — run the dishwasher, save $0.78."* Follow it, earn credits toward your bill.
+- **Learns from you** — ignore a type of nudge three times and the agent stops suggesting it. Nobody coded that rule; the loop corrects itself.
+- **Runs on a heartbeat** — a background cycle (plan → act → observe → self-correct) every ~60 min, plus a "run a check now" button in the app.
+
+---
+
 ## Sponsors
 
 - **Nexla** — our data ingestion layer. Live grid readings flow through a real Nexla pipeline (webhook source → nexset), and the agent reads its world-state back out of Nexla's API every cycle.
