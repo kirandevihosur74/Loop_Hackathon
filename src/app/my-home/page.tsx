@@ -1,11 +1,116 @@
-import { Screen } from "@/components/layout/Screen";
+"use client";
 
-// Route shell — replaced by the My Home screen build.
+import { useEffect, useMemo, useState } from "react";
+import { Pill, SectionHeader } from "@/components/ui";
+import { Screen } from "@/components/layout/Screen";
+import { getAppliances, deleteAppliance } from "@/lib/data";
+import type { Appliance, ApplianceType } from "@/lib/types";
+import { ScanButton } from "@/components/myhome/ScanButton";
+import { ApplianceList } from "@/components/myhome/ApplianceList";
+import { AddApplianceForm } from "@/components/myhome/AddApplianceForm";
+import { ImportBillCard } from "@/components/myhome/ImportBillCard";
+
+type Filter = ApplianceType | "all";
+
+const FILTERS: { value: Filter; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "ev", label: "EV" },
+  { value: "hvac", label: "HVAC" },
+  { value: "kitchen", label: "Kitchen" },
+  { value: "laundry", label: "Laundry" },
+  { value: "electronics", label: "Electronics" },
+  { value: "other", label: "Other" },
+];
+
 export default function MyHomePage() {
+  const [appliances, setAppliances] = useState<Appliance[] | null>(null);
+  const [filter, setFilter] = useState<Filter>("all");
+
+  useEffect(() => {
+    let alive = true;
+    getAppliances().then((list) => {
+      if (alive) setAppliances(list);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const filtered = useMemo(() => {
+    if (!appliances) return [];
+    if (filter === "all") return appliances;
+    return appliances.filter((a) => a.type === filter);
+  }, [appliances, filter]);
+
+  function prepend(a: Appliance) {
+    // New scans / manual adds land at the top so the enter animation is seen.
+    setAppliances((prev) => (prev ? [a, ...prev] : [a]));
+  }
+
+  async function handleDelete(id: string) {
+    setAppliances((prev) => (prev ? prev.filter((a) => a.id !== id) : prev)); // optimistic
+    try {
+      await deleteAppliance(id);
+    } catch {
+      // Rollback: re-fetch the authoritative list.
+      const fresh = await getAppliances();
+      setAppliances(fresh);
+    }
+  }
+
   return (
-    <Screen>
-      <h1 className="text-xl font-bold text-ink">My Home</h1>
-      <p className="mt-1 text-sm text-sub">Your appliances &amp; bill — coming together.</p>
+    <Screen className="pb-8">
+      <header className="mb-4">
+        <h1 className="text-2xl font-bold tracking-tight text-ink">My Home</h1>
+        <p className="mt-0.5 text-sm text-sub">
+          The appliances the agent plans around. Add what you have — it does the rest.
+        </p>
+      </header>
+
+      <ScanButton onScanned={prepend} />
+
+      <div className="mt-5">
+        <SectionHeader title="Your appliances" />
+
+        {/* Filter chips */}
+        <div className="-mx-4 mb-3 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex w-max gap-2">
+            {FILTERS.map((f) => (
+              <Pill
+                key={f.value}
+                active={filter === f.value}
+                onClick={() => setFilter(f.value)}
+              >
+                {f.label}
+              </Pill>
+            ))}
+          </div>
+        </div>
+
+        {appliances === null ? (
+          <ApplianceListSkeleton />
+        ) : (
+          <ApplianceList appliances={filtered} onDelete={handleDelete} />
+        )}
+      </div>
+
+      <div className="mt-4">
+        <AddApplianceForm onAdded={prepend} />
+      </div>
+
+      <div className="mt-8">
+        <ImportBillCard />
+      </div>
     </Screen>
+  );
+}
+
+function ApplianceListSkeleton() {
+  return (
+    <div className="flex flex-col gap-2" aria-hidden="true">
+      {[0, 1, 2, 3].map((i) => (
+        <div key={i} className="h-[68px] animate-pulse rounded-lg bg-card shadow-soft" />
+      ))}
+    </div>
   );
 }
