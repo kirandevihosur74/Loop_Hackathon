@@ -21,3 +21,6 @@ nexla/RESOURCES.local.md
 # Editor
 .idea/
 .vscode/
+
+# Next.js build output (Frontend has its own .gitignore)
+.next/
