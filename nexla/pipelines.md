@@ -48,3 +48,25 @@ otherwise the loop treats it as 0.5. (A later step can move percentile ranking i
 - Prompt-to-pipeline (Express) means new data sources are minutes, not hours.
 - Agent CLI is scriptable + `--dry-run` safe, so the whole ingest layer is reproducible
   and lives in version control (`nexla/setup.sh`).
+
+## Live wiring (path B — implemented, keyless-to-run)
+
+The loop is wired to a **real Nexla pipeline** today. Concrete resource ids + keys live in
+`nexla/RESOURCES.local.md` (gitignored). Shape:
+
+1. **Webhook source** (`source_type: nexla_rest`) — Nexla hands back an ingest URL + api_key.
+2. **Feeder** `python -m app.ingest.nexla_feed` pulls the live CAISO reading and POSTs it to
+   that URL. Nexla lands it in a **nexset** (dataset).
+3. **Read-back** — `ingest/nexla.read_latest` exchanges the **service key → bearer token**
+   (`POST {NEXLA_API_URL}/token`) and pulls the newest record from
+   `GET /data_sets/{NEXLA_NEXSET_ID}/samples`. Data genuinely transits Nexla:
+   `CAISO → Nexla nexset → loop`. `/health` reports `data_source: nexla+caiso-fallback`.
+
+Env to activate: `NEXLA_SERVICE_KEY`, `NEXLA_NEXSET_ID`, `NEXLA_INGEST_URL` (see `.env.example`).
+Org tier is **Express Free** — 1M records/day, no credits/billing required.
+
+**CLI caveat:** on the current `dataops.nexla.io` API instance the `nexla-cli`
+`login`/`activate`/`sample`/`connectors` subcommands 404 (CLI↔API version skew), so the
+integration uses the **raw REST API** directly (proven working). The CLI still installs via
+`npm i -g @nexla/nexla-cli`; the aspirational flags in `setup.sh` are unverified against this
+instance.

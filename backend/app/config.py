@@ -24,9 +24,16 @@ class Settings(BaseSettings):
     use_mock_data: bool = False
     default_iso: str = "CAISO"
     caiso_node: str = ""            # blank → auto by household lat (NP15 / SP15)
-    nexla_service_key: str = ""
-    nexla_sink_url: str = ""
     gridstatus_api_key: str = ""
+
+    # Nexla (sponsor) — real pipeline: readings land in a Nexla nexset via a webhook
+    # source; the loop reads the latest record back through the authenticated Nexla API.
+    # service key → short-lived bearer token → GET /data_sets/{nexset}/samples.
+    nexla_service_key: str = ""     # exchanged for a bearer token (never sent to sinks)
+    nexla_api_url: str = "https://dataops.nexla.io/nexla-api"
+    nexla_nexset_id: int = 0        # dataset id to read the latest reading from (0 = off)
+    nexla_ingest_url: str = ""      # webhook push URL (feeder POSTs readings here)
+    nexla_sink_url: str = ""        # legacy: unauthenticated GET returning the latest row
 
     # Shadow/sun signal (teammate's SF shadow dataset → sun-aware nudges).
     shadow_enabled: bool = True

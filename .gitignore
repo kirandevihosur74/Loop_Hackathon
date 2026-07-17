@@ -8,6 +8,8 @@ venv/
 # Env / secrets
 .env
 backend/.env
+*.local.md
+nexla/RESOURCES.local.md
 
 # DB
 *.db

@@ -41,10 +41,16 @@ app.include_router(loop.router)
 @app.get("/health", tags=["meta"])
 def health() -> dict:
     settings = get_settings()
+    if settings.use_mock_data:
+        data_source = "mock"
+    elif settings.nexla_service_key and settings.nexla_nexset_id:
+        data_source = "nexla+caiso-fallback"       # live Nexla nexset, CAISO underneath
+    else:
+        data_source = "caiso-oasis+fallback"
     return {
         "ok": True,
         "service": "loop-backend",
         "agent_brain": "claude" if settings.anthropic_api_key else "mock",
-        "data_source": "mock" if settings.use_mock_data else "caiso-oasis+fallback",
+        "data_source": data_source,
         "scheduler": settings.enable_scheduler,
     }
