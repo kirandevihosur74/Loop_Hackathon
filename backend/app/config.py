@@ -40,6 +40,12 @@ class Settings(BaseSettings):
     shadow_enabled: bool = True
     shadow_data_dir: str = ""       # blank → repo datasets/shadow_data; set in Docker
 
+    # Appliance photo scan (Upload photo → identify device + watts).
+    # Optional external vision/OCR service: POST multipart field `file`, JSON back
+    # with type/model/power_kw (or power_w/watts) — see app/vision/scan.py.
+    inference_url: str = ""
+    hardware_data_dir: str = ""     # blank → repo datasets/hardware-analytics; set in Docker
+
     # Nudge delivery via Zero.xyz (agent tool layer; pays per call in USDC on Base).
     # Two safety gates: disabled by default, AND dry-run by default (build the CLI call
     # but do NOT spend) — flip both off + fund the wallet to actually send.

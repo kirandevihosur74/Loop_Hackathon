@@ -108,7 +108,7 @@ export default function MyHomePage() {
         The agent reads your bill to learn your habits and plan around your rate plan.
       </p>
 
-      <ScanSweep scanning={scan.scanning} previewUrl={scan.previewUrl} />
+      <ScanSweep scanning={scan.scanning} previewUrl={scan.previewUrl} error={scan.error} />
       <ImportBillSummary inputId={bill.inputId} phase={bill.phase} summary={bill.summary} />
 
       <div className="mt-5">

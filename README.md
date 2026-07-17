@@ -62,6 +62,7 @@ to force the offline mock price curve; add `NEXLA_SINK_URL` to prefer a Nexla si
 | `GET /credits/events?household_id=1&since_id=0` | Credit-award events (their credit system consumes) |
 | `GET /credits/balance?household_id=1` | Running credit balance |
 | `GET/POST /household/{id}` + `/appliances` | Onboarding profile + appliances |
+| `POST /household/{id}/appliances/scan` | Multipart photo → identify + add appliance |
 | `GET /health` | Which brain / data source is live |
 
 Full schema at `/docs` (Swagger).

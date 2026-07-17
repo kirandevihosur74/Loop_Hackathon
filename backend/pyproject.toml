@@ -12,6 +12,7 @@ dependencies = [
     "apscheduler>=3.10",
     "httpx>=0.27",
     "pillow>=10.0",
+    "python-multipart>=0.0.9",
 ]
 
 [project.optional-dependencies]

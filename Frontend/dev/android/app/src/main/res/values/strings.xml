@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Powerfly</string>
+    <string name="title_activity_main">Powerfly</string>
+    <string name="package_name">com.loop.powerfly</string>
+    <string name="custom_url_scheme">com.loop.powerfly</string>
+</resources>

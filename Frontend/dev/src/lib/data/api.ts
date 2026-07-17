@@ -92,12 +92,17 @@ const TYPE_TO_UI: Record<string, ApplianceType> = {
   dishwasher: "kitchen",
   washer: "laundry",
   dryer: "laundry",
+  kitchen: "kitchen",
+  electronics: "electronics",
+  other: "other",
 };
 const UI_TO_TYPE: Partial<Record<ApplianceType, string>> = {
   ev: "ev_charger",
   hvac: "ac",
   kitchen: "dishwasher",
   laundry: "washer",
+  electronics: "electronics",
+  other: "other",
 };
 
 interface WireAppliance {
@@ -105,6 +110,7 @@ interface WireAppliance {
   type: string;
   model: string;
   power_kw: number;
+  note?: string;
 }
 
 function toAppliance(w: WireAppliance): Appliance {
@@ -113,6 +119,7 @@ function toAppliance(w: WireAppliance): Appliance {
     name: w.model || w.type,
     type: TYPE_TO_UI[w.type] ?? (w.type as ApplianceType) ?? "other",
     kw: w.power_kw,
+    note: w.note,
   };
 }
 
@@ -230,7 +237,7 @@ export async function deleteAppliance(id: string): Promise<void> {
   await api(`/household/${HOUSEHOLD}/appliances/${id}`, { method: "DELETE" });
 }
 
-/** Devices a "camera scan" can detect — rotates through the pool, persists via the backend. */
+/** Devices a stub "Scan appliance" (no photo) can detect — rotates and POSTs via addAppliance. */
 const SCAN_POOL: Omit<Appliance, "id">[] = [
   { name: "Nest Thermostat", type: "hvac", kw: 0.005 },
   { name: "Samsung Fridge", type: "kitchen", kw: 0.15 },
@@ -240,7 +247,27 @@ const SCAN_POOL: Omit<Appliance, "id">[] = [
 ];
 let scanIdx = 0;
 
-export async function scanAppliance(): Promise<Appliance> {
+/**
+ * Detect an appliance.
+ * - With a photo: POST multipart to `/appliances/scan` (inference → persisted row).
+ * - Without: rotate SCAN_POOL and POST via addAppliance (survives reload).
+ */
+export async function scanAppliance(file?: File): Promise<Appliance> {
+  if (file) {
+    const form = new FormData();
+    form.append("file", file);
+
+    const res = await fetch(`${BASE}/household/${HOUSEHOLD}/appliances/scan`, {
+      method: "POST",
+      body: form,
+      cache: "no-store",
+      signal: AbortSignal.timeout(90000),
+    });
+    if (!res.ok) throw new Error(`/household/${HOUSEHOLD}/appliances/scan -> HTTP ${res.status}`);
+    const row = (await res.json()) as WireAppliance;
+    return toAppliance(row);
+  }
+
   const pick = SCAN_POOL[scanIdx++ % SCAN_POOL.length];
-  return addAppliance(pick); // real POST — survives reload, agent plans around it
+  return addAppliance(pick);
 }

@@ -9,13 +9,12 @@ import { ease } from "@/lib/motion";
 import type { Appliance } from "@/lib/types";
 
 /**
- * Stubbed "camera" / photo-upload scan behavior. On scan() or after picking an
- * image it plays a brief simulated-scan sweep (~1.5s, reduced-motion aware),
- * then awaits scanAppliance() and hands the detected appliance up to the parent
- * to prepend to the list.
+ * Scan / photo-upload behavior. On scan() (stub camera) or after picking an
+ * image it plays a brief sweep, then awaits scanAppliance(file?) and hands the
+ * detected appliance up to the parent to prepend to the list.
  *
- * State lives in this hook so the trigger buttons can sit in the shared action
- * row while the sweep panel (<ScanSweep/>) renders full-width below the row.
+ * Upload photo sends the image to the backend inference path; Scan appliance
+ * without a file stays on the mock rotating pool.
  */
 export function useScan(onScanned: (a: Appliance) => void) {
   const reduce = useReducedMotion();
@@ -23,16 +22,26 @@ export function useScan(onScanned: (a: Appliance) => void) {
   const inputId = useId();
   const [scanning, setScanning] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  async function detect(nextPreview: string | null = null) {
+  async function detect(file: File | null, nextPreview: string | null = null) {
     if (scanning) return;
     setScanning(true);
+    setError(null);
     setPreviewUrl(nextPreview);
     try {
-      // Simulated camera / photo sweep before the "detection" resolves.
-      if (!reduce) await new Promise((r) => setTimeout(r, 1500));
-      const detected = await scanAppliance();
+      const minSweep = reduce ? Promise.resolve() : new Promise((r) => setTimeout(r, 1500));
+      const [detected] = await Promise.all([
+        scanAppliance(file ?? undefined),
+        minSweep,
+      ]);
       onScanned(detected);
+    } catch {
+      setError(
+        file
+          ? "Couldn't identify that appliance. Try a clearer photo or nameplate shot."
+          : "Scan failed — try again in a moment.",
+      );
     } finally {
       setScanning(false);
       if (nextPreview) URL.revokeObjectURL(nextPreview);
@@ -54,11 +63,12 @@ export function useScan(onScanned: (a: Appliance) => void) {
     // Reset so re-selecting the same file still fires onChange.
     e.target.value = "";
     if (!file || !file.type.startsWith("image/")) return;
-    void detect(URL.createObjectURL(file));
+    void detect(file, URL.createObjectURL(file));
   }
 
   return {
     scanning,
+    error,
     scan,
     previewUrl,
     inputRef,
@@ -137,62 +147,72 @@ export function UploadPhotoButton({
 export function ScanSweep({
   scanning,
   previewUrl,
+  error,
 }: {
   scanning: boolean;
   previewUrl?: string | null;
+  error?: string | null;
 }) {
   const reduce = useReducedMotion();
 
   return (
-    <AnimatePresence>
-      {scanning && (
-        <motion.div
-          initial={reduce ? { opacity: 1 } : { opacity: 0, height: 0 }}
-          animate={reduce ? { opacity: 1 } : { opacity: 1, height: "auto" }}
-          exit={reduce ? { opacity: 0 } : { opacity: 0, height: 0 }}
-          transition={{ duration: 0.28, ease }}
-          className="overflow-hidden"
-        >
-          <div className="mt-3 flex h-28 items-center justify-center overflow-hidden rounded-md bg-card shadow-soft ring-1 ring-line">
-            <div className="relative h-full w-full">
-              {previewUrl && (
-                // eslint-disable-next-line @next/next/no-img-element -- local object URL preview
-                <img
-                  src={previewUrl}
-                  alt=""
-                  className="absolute inset-0 h-full w-full object-cover opacity-40"
-                />
-              )}
+    <>
+      <AnimatePresence>
+        {scanning && (
+          <motion.div
+            initial={reduce ? { opacity: 1 } : { opacity: 0, height: 0 }}
+            animate={reduce ? { opacity: 1 } : { opacity: 1, height: "auto" }}
+            exit={reduce ? { opacity: 0 } : { opacity: 0, height: 0 }}
+            transition={{ duration: 0.28, ease }}
+            className="overflow-hidden"
+          >
+            <div className="mt-3 flex h-28 items-center justify-center overflow-hidden rounded-md bg-card shadow-soft ring-1 ring-line">
+              <div className="relative h-full w-full">
+                {previewUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element -- local object URL preview
+                  <img
+                    src={previewUrl}
+                    alt=""
+                    className="absolute inset-0 h-full w-full object-cover opacity-40"
+                  />
+                )}
 
-              {/* Framing brackets */}
-              <div className="pointer-events-none absolute inset-4">
-                <span className="absolute left-0 top-0 h-4 w-4 rounded-tl-sm border-l-2 border-t-2 border-gold" />
-                <span className="absolute right-0 top-0 h-4 w-4 rounded-tr-sm border-r-2 border-t-2 border-gold" />
-                <span className="absolute bottom-0 left-0 h-4 w-4 rounded-bl-sm border-b-2 border-l-2 border-gold" />
-                <span className="absolute bottom-0 right-0 h-4 w-4 rounded-br-sm border-b-2 border-r-2 border-gold" />
-              </div>
-
-              {reduce ? (
-                <div className="relative flex h-full items-center justify-center">
-                  <span className="text-sm font-semibold text-sub">Detecting appliance…</span>
+                {/* Framing brackets */}
+                <div className="pointer-events-none absolute inset-4">
+                  <span className="absolute left-0 top-0 h-4 w-4 rounded-tl-sm border-l-2 border-t-2 border-gold" />
+                  <span className="absolute right-0 top-0 h-4 w-4 rounded-tr-sm border-r-2 border-t-2 border-gold" />
+                  <span className="absolute bottom-0 left-0 h-4 w-4 rounded-bl-sm border-b-2 border-l-2 border-gold" />
+                  <span className="absolute bottom-0 right-0 h-4 w-4 rounded-br-sm border-b-2 border-r-2 border-gold" />
                 </div>
-              ) : (
-                <motion.div
-                  aria-hidden="true"
-                  className="absolute inset-x-6 h-0.5 rounded-pill"
-                  style={{
-                    background: `linear-gradient(90deg, transparent, ${cssVar.gold}, transparent)`,
-                  }}
-                  initial={{ top: "18%" }}
-                  animate={{ top: ["18%", "82%", "18%"] }}
-                  transition={{ duration: 1.4, ease, repeat: Infinity }}
-                />
-              )}
+
+                {reduce ? (
+                  <div className="relative flex h-full items-center justify-center">
+                    <span className="text-sm font-semibold text-sub">Detecting appliance…</span>
+                  </div>
+                ) : (
+                  <motion.div
+                    aria-hidden="true"
+                    className="absolute inset-x-6 h-0.5 rounded-pill"
+                    style={{
+                      background: `linear-gradient(90deg, transparent, ${cssVar.gold}, transparent)`,
+                    }}
+                    initial={{ top: "18%" }}
+                    animate={{ top: ["18%", "82%", "18%"] }}
+                    transition={{ duration: 1.4, ease, repeat: Infinity }}
+                  />
+                )}
+              </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {error && !scanning && (
+        <p className="mt-2 text-xs text-peak" role="alert">
+          {error}
+        </p>
       )}
-    </AnimatePresence>
+    </>
   );
 }
 

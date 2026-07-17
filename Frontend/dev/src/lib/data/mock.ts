@@ -413,8 +413,12 @@ export async function addAppliance(a: Omit<Appliance, "id">): Promise<Appliance>
   return delay(created, 300);
 }
 
-/** Convenience for the "scan an appliance" flow — returns the next detected device. */
-export async function scanAppliance(): Promise<Appliance> {
+/** Convenience for the "scan an appliance" flow — returns the next detected device.
+ * When a photo is provided we still use the pool (offline mock); the live API
+ * path in `api.ts` does real inference.
+ */
+export async function scanAppliance(file?: File): Promise<Appliance> {
+  void file;
   const next = SCAN_POOL[scanIdx % SCAN_POOL.length];
   scanIdx++;
   return addAppliance(next);
