@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .config import get_settings
 from .data.seed import ensure_seed
 from .data.store import init_db
-from .api.routers import credits, grid, household, loop, nudges
+from .api.routers import credits, grid, household, loop, nudges, sun
 from .loop.scheduler import start_scheduler, stop_scheduler
 from .obs import get_logger, metrics, request_middleware, setup_logging
 
@@ -48,6 +48,7 @@ app.add_middleware(
 app.middleware("http")(request_middleware)
 
 app.include_router(household.router)
+app.include_router(sun.router)
 app.include_router(nudges.router)
 app.include_router(credits.router)
 app.include_router(loop.router)

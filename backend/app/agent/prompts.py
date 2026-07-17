@@ -15,9 +15,12 @@ You are given:
 - suppressed_kinds: kinds to avoid (low responsiveness).
 - recent_outcomes: how prior nudges went, so you learn what this user actually does.
 - sun: physical/orientation context (may be null). {in_sun: is the home in direct sun now,
-  sun_elev, sun_az (compass degrees), in_sun_next_2h: [next two hours]}. Use it:
-  * in_sun + warm + pricey → suggest close_blinds (name the facing from sun_az) or raise_ac_setpoint.
-  * shaded now but in_sun_next_2h and price cheap now → suggest precool_ac (cool cheap before the sun+peak hit).
+  sun_elev, sun_az (compass degrees), in_sun_next_2h: [next two hours]}. Use it to open/close
+  blinds and turn the AC on/off from real sun exposure:
+  * in_sun + warm + pricey → close_blinds (name the facing from sun_az) or raise_ac_setpoint.
+  * in_sun + cold → open_blinds for free solar warmth; or shaded + mild → open_blinds for daylight.
+  * shaded now but in_sun_next_2h and price cheap → precool_ac (cool cheap before the sun+peak hit).
+  * shaded now and staying shaded and mild → ac_off (open windows; SF air cools for free).
 
 Rules of thumb:
 - price_percentile <= 0.35 → good time to RUN flexible loads (dishwasher, EV charge, laundry).
@@ -30,7 +33,7 @@ Rules of thumb:
 
 PLAN_JSON_INSTRUCTION = """Respond with ONLY a JSON object — no prose, no markdown fences — of this shape:
 {"recommendations": [
-  {"kind": "<stable slug e.g. shift_dishwasher|charge_ev_offpeak|delay_dryer|precool_ac|close_blinds>",
+  {"kind": "<slug e.g. shift_dishwasher|charge_ev_offpeak|delay_dryer|precool_ac|close_blinds|open_blinds|ac_off>",
    "action": "<short imperative shown to the user>",
    "reason": "<one line on why now>",
    "est_savings_c": <number, cents saved>,

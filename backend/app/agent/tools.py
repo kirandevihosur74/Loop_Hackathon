@@ -14,7 +14,8 @@ RECOMMEND_TOOL = {
                         "kind": {
                             "type": "string",
                             "description": "Stable category slug, e.g. shift_dishwasher, "
-                            "charge_ev_offpeak, delay_dryer, precool_ac, raise_ac_setpoint.",
+                            "charge_ev_offpeak, delay_dryer, precool_ac, raise_ac_setpoint, "
+                            "close_blinds, open_blinds, ac_off.",
                         },
                         "action": {"type": "string", "description": "Short imperative shown to the user."},
                         "reason": {"type": "string", "description": "One line on why now."},

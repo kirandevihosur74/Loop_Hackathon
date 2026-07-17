@@ -119,20 +119,41 @@ def _mock_plan(context: dict) -> list[dict]:
         add("raise_ac_setpoint", "ac", "Nudge the AC up 2°F",
             f"Grid is expensive now ({price:.0f}c/kWh) and it's {snap['temp_c']:.0f}°C out.", 2.0, 120)
 
-    # Sun/shade signal (SF shadow dataset) — orientation-aware nudges.
+    # Sun/shade signal (SF shadow dataset) — orientation-aware nudges. Completes the
+    # open/close-blinds + AC on/off matrix; live temp + price decide which way to act.
     sun = context.get("sun")
     if sun and sun.get("period") == "day":
         temp = snap["temp_c"]
-        if sun.get("in_sun") and temp >= 20 and pct >= 0.5:
-            facing = _compass(sun.get("sun_az"))
+        in_sun = sun.get("in_sun")
+        facing = _compass(sun.get("sun_az"))
+        soon_sun = any(sun.get("in_sun_next_2h", []))
+
+        # Blinds: close to block solar gain when sunny/warm/pricey; otherwise open them
+        # for free morning warmth or daylight.
+        if in_sun and temp >= 20 and pct >= 0.5:
             add("close_blinds", None, f"Close your {facing}-facing blinds",
                 f"Direct sun on your place now (sun {facing}, {temp:.0f}°C) with power at "
                 f"{price:.0f}c/kWh — blocking it cuts AC load.", 0, 90,
                 fixed_savings=round(max(4.0, price * 0.6), 1))
-        if not sun.get("in_sun") and any(sun.get("in_sun_next_2h", [])) and pct <= 0.4:
+        elif in_sun and temp < 16:
+            add("open_blinds", None, f"Open your {facing}-facing blinds",
+                f"Sun's on your place and it's cool ({temp:.0f}°C) — let it in for free "
+                f"warmth and ease off the heat.", 0, 120, fixed_savings=5.0)
+        elif not in_sun and 16 <= temp <= 24:
+            add("open_blinds", None, "Open your blinds for daylight",
+                f"You're shaded now ({temp:.0f}°C) — no overheating risk; open up and "
+                f"skip the lights.", 0, 120, fixed_savings=3.0)
+
+        # AC: pre-cool before the sun + peak arrive; switch it off once you're shaded and mild.
+        if not in_sun and soon_sun and pct <= 0.4:
             add("precool_ac", "ac", "Pre-cool now while power's cheap",
                 f"Sun reaches your place within ~2h; cooling now at {price:.0f}c/kWh "
                 f"beats cooling into the peak.", 2.0, 120)
+        elif not in_sun and not soon_sun and temp <= 22:
+            add("ac_off", "ac", "Turn off the AC — open the windows",
+                f"You're shaded for the next few hours and it's mild ({temp:.0f}°C) — "
+                f"let SF's cool air do the work instead of the AC.", 0, 120,
+                fixed_savings=6.0)
 
     recs.sort(key=lambda r: r["est_savings_c"], reverse=True)
     return recs[:3]
