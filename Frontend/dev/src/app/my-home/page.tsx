@@ -63,6 +63,7 @@ export default function MyHomePage() {
       name: suggestion.name,
       type: suggestion.type,
       kw: suggestion.kw,
+      photo: suggestion.photo,
       note:
         note ||
         suggestion.note ||

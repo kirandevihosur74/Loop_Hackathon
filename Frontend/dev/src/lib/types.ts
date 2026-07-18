@@ -62,6 +62,7 @@ export interface Appliance {
   type: ApplianceType;
   kw: number;
   note?: string;
+  photo?: string; // compressed data URL of the scanned photo (for the details view)
 }
 
 /**

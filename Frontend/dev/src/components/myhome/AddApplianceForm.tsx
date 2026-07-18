@@ -14,6 +14,8 @@ export interface ScanPrefill {
   kw?: number;
   /** Why the scan handed off (shown as a hint inside the form). */
   note?: string;
+  /** Compressed photo from the scan, carried onto the manually-added device. */
+  photo?: string;
 }
 
 const TYPE_OPTIONS: { value: ApplianceType; label: string }[] = [
@@ -67,7 +69,8 @@ export function AddApplianceForm({
     setSaving(true);
     try {
       const created = await addAppliance({ name: name.trim(), type, kw: kwNum });
-      onAdded(created);
+      // Carry the scan's photo/note onto the manually-confirmed device.
+      onAdded({ ...created, note: created.note ?? prefill?.note, photo: prefill?.photo });
       setName("");
       setKw("");
       setType("kitchen");

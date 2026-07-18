@@ -198,6 +198,37 @@ function parseScanJson(text: string): ScanJson | null {
   }
 }
 
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("image decode failed"));
+    img.src = src;
+  });
+}
+
+/**
+ * Shrink a captured photo to a small JPEG (data URL) so it's cheap to keep and
+ * quick to show in the device-details view. Returns "" if it can't be encoded.
+ */
+async function compressPhoto(dataUrl: string, maxDim = 800, quality = 0.7): Promise<string> {
+  try {
+    const img = await loadImage(dataUrl);
+    const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+    const w = Math.max(1, Math.round(img.width * scale));
+    const h = Math.max(1, Math.round(img.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return "";
+    ctx.drawImage(img, 0, 0, w, h);
+    return canvas.toDataURL("image/jpeg", quality);
+  } catch {
+    return "";
+  }
+}
+
 function toAppliance(w: WireAppliance): Appliance {
   return {
     id: String(w.id),
@@ -353,6 +384,8 @@ export async function scanAppliance(file?: File): Promise<ScanResult> {
       const comma = dataUrl.indexOf(",");
       const mediaType = /^data:([^;]+)/.exec(dataUrl)?.[1] || file.type || "image/jpeg";
       const b64 = comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl;
+      // Compressed copy to keep with the device for the details view.
+      const photo = (await compressPhoto(dataUrl)) || undefined;
 
       const res = await fetch(`${getApiBase()}${path}`, {
         method: "POST",
@@ -425,7 +458,7 @@ export async function scanAppliance(file?: File): Promise<ScanResult> {
           identified: true,
           // Nothing is persisted server-side (the bridge is stateless), so mint a
           // client id; the My Home page prepends it to the local list.
-          appliance: { ...mapped, id: `scan-${Date.now().toString(36)}` },
+          appliance: { ...mapped, id: `scan-${Date.now().toString(36)}`, photo },
           note: parsed.note,
           source: "claude",
           confidence: parsed.confidence,
@@ -433,7 +466,7 @@ export async function scanAppliance(file?: File): Promise<ScanResult> {
       }
       return {
         identified: false,
-        suggestion: { name: mapped.name, type: mapped.type, kw: mapped.kw, note: mapped.note },
+        suggestion: { name: mapped.name, type: mapped.type, kw: mapped.kw, note: mapped.note, photo },
         note: parsed.note,
         source: "claude",
         confidence: parsed.confidence,
