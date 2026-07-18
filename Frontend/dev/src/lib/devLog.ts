@@ -20,11 +20,34 @@ export type ApiLogEntry = {
 
 const API_BASE_KEY = "powerfly.apiBase";
 const STRICT_KEY = "powerfly.strictLive";
+const LOGS_KEY = "powerfly.apiLogs";
 const MAX_LOGS = 80;
 
 type Listener = () => void;
 
-let logs: ApiLogEntry[] = [];
+/** Hydrate the buffer from localStorage so logs captured before the dev panel
+ * was ever opened (and across reloads) are still there to inspect. */
+function loadPersisted(): ApiLogEntry[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(LOGS_KEY);
+    const parsed = raw ? JSON.parse(raw) : null;
+    return Array.isArray(parsed) ? (parsed as ApiLogEntry[]).slice(0, MAX_LOGS) : [];
+  } catch {
+    return [];
+  }
+}
+
+function persist() {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(LOGS_KEY, JSON.stringify(logs));
+  } catch {
+    /* quota / private mode — logging is best-effort */
+  }
+}
+
+let logs: ApiLogEntry[] = loadPersisted();
 const listeners = new Set<Listener>();
 
 function notify() {
@@ -42,6 +65,7 @@ export function getApiLogs(): ApiLogEntry[] {
 
 export function clearApiLogs() {
   logs = [];
+  persist();
   notify();
 }
 
@@ -52,6 +76,7 @@ export function pushApiLog(entry: Omit<ApiLogEntry, "id" | "ts"> & { id?: string
     ...entry,
   };
   logs = [row, ...logs].slice(0, MAX_LOGS);
+  persist();
   notify();
   if (typeof console !== "undefined") {
     const tag = row.ok ? "✓" : "✗";
@@ -71,7 +96,10 @@ export function getApiBase(): string {
       /* private mode */
     }
   }
-  return (process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000").replace(/\/+$/, "");
+  return (process.env.NEXT_PUBLIC_API_BASE ?? "https://inference.josephbissell.com/hax").replace(
+    /\/+$/,
+    "",
+  );
 }
 
 export function setApiBase(url: string) {

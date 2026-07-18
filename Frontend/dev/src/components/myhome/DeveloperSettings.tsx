@@ -121,7 +121,7 @@ function DeveloperPanel({ onClose }: { onClose: () => void }) {
         id="dev-api-base"
         value={base}
         onChange={(e) => setBase(e.target.value)}
-        placeholder="http://192.168.x.x:8000"
+        placeholder="https://inference.josephbissell.com/hax"
         className="mt-1 w-full rounded-md bg-bg px-3 py-2 text-sm text-ink ring-1 ring-line outline-none focus:ring-gold"
         autoCapitalize="off"
         autoCorrect="off"
