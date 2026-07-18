@@ -39,13 +39,12 @@ they integrate against the contract endpoints below.
 | **PLAN** | `agent/client.py` | Claude (structured tool output) → ranked recommendations. Mock brain if no API key |
 | **ACT** | `loop/stages/act.py` | Dedupe + fatigue filter → persist `Nudge`s, emit push/credit events |
 
-**Self-correction** = REFLECT suppresses any nudge kind the user keeps dismissing, so the
-loop visibly adapts. (Proven in `tests/test_flow.py::test_loop_self_corrects...`.)
+**Self-correction:** dismiss a nudge kind a few times and REFLECT suppresses it — the loop
+changes its own behavior from what you actually do.
 
-- **Brain:** Claude API direct — Haiku (cheap, high-cadence) by default, Sonnet for heavier analysis. Runs **keyless** via a rule-based mock brain for demos.
-- **Data (real by default, keyless):** live **CAISO OASIS** real-time 5-min LMP → `ingest/caiso.py` (the ground truth behind CAISO's *Today's Outlook › Prices*), + Open-Meteo weather. The price **percentile is computed from today's actual price distribution**, not a model.
-  Ingest order: Nexla sink → **CAISO OASIS** → GridStatus → mock. Set `USE_MOCK_DATA=true` for an offline/deterministic demo. See [`nexla/`](nexla/).
-- **Cadence:** APScheduler (default 60 min, `ENABLE_SCHEDULER`) + manual `POST /loop/run` for demos.
+- **Brain:** Claude (Haiku) decides each cycle's nudges. Falls back to a rule engine if the API is unavailable, so the loop never dies.
+- **Data:** live CAISO real-time prices, ingested through Nexla, plus weather and a sun/shadow map of SF. The "cheap right now" signal is the price's real percentile within today's actual prices.
+- **Cadence:** a background cycle every ~60 min, plus `POST /loop/run` to fire one on demand.
 
 ---
 
