@@ -229,6 +229,108 @@ async function compressPhoto(dataUrl: string, maxDim = 800, quality = 0.7): Prom
   }
 }
 
+const REFINE_SYSTEM =
+  `You are refining an UNCERTAIN home-appliance identification for an energy app. Study the photo ` +
+  `closely — read any visible brand, model number, wattage or nameplate text, and use your knowledge ` +
+  `of that specific device/category. Respond with ONLY a JSON object (no markdown): ` +
+  `{"type":one of [ev_charger,ac,dishwasher,washer,dryer,kitchen,electronics,other],"model":string,` +
+  `"power_kw":number,"confidence":number,"note":short}. power_kw = typical RUNNING power in kW.`;
+
+/** One vision call to the /hax bridge. Logs to the dev panel, throws on transport
+ *  failure, returns the parsed JSON (or null if the reply carried no JSON). */
+async function askVision(
+  dataUrl: string,
+  system: string,
+  userText: string,
+  label: string,
+): Promise<ScanJson | null> {
+  const path = "/v1/messages";
+  const key = getInferenceKey();
+  const comma = dataUrl.indexOf(",");
+  const media = /^data:([^;]+)/.exec(dataUrl)?.[1] || "image/jpeg";
+  const b64 = comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl;
+  const started = performance.now();
+  try {
+    const res = await fetch(`${getApiBase()}${path}`, {
+      method: "POST",
+      cache: "no-store",
+      signal: AbortSignal.timeout(90000),
+      headers: {
+        "content-type": "application/json",
+        "anthropic-version": "2023-06-01",
+        ...(key ? { "x-api-key": key } : {}),
+      },
+      body: JSON.stringify({
+        model: SCAN_MODEL,
+        max_tokens: 500,
+        system,
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "image", source: { type: "base64", media_type: media, data: b64 } },
+              { type: "text", text: userText },
+            ],
+          },
+        ],
+      }),
+    });
+    const durationMs = Math.round(performance.now() - started);
+    if (!res.ok) {
+      pushApiLog({ method: "POST", path: label, status: res.status, ok: false, durationMs, source: "error", error: `HTTP ${res.status}` });
+      throw new Error(`${path} -> HTTP ${res.status}`);
+    }
+    const msg = (await res.json()) as { content?: Array<{ type?: string; text?: string }> };
+    const out = (msg.content ?? []).filter((b) => b.type === "text").map((b) => b.text ?? "").join("").trim();
+    const parsed = parseScanJson(out);
+    pushApiLog({ method: "POST", path: label, status: res.status, ok: true, durationMs, source: "live", summary: summarizeBody(parsed ?? out.slice(0, 80)) });
+    return parsed;
+  } catch (err) {
+    const durationMs = Math.round(performance.now() - started);
+    if (!(err instanceof Error && /HTTP \d+/.test(err.message))) {
+      pushApiLog({ method: "POST", path: label, ok: false, durationMs, source: "error", error: err instanceof Error ? err.message : String(err) });
+    }
+    throw err;
+  }
+}
+
+/**
+ * Agent loop for an uncertain device: re-examine the stored photo with a more
+ * careful prompt (up to 2 passes) to pin the model and typical kW. Returns the
+ * fields to patch onto the device; never throws — on failure it just clears the
+ * researching flag and leaves the original approximation in place.
+ */
+export async function refineAppliance(app: Appliance): Promise<Partial<Appliance>> {
+  if (!app.photo) return { researching: false };
+  try {
+    let best: ScanJson | null = null;
+    for (let pass = 0; pass < 2; pass++) {
+      const userText =
+        pass === 0
+          ? "Re-examine this appliance carefully and identify it as precisely as you can."
+          : `Your previous read was "${best?.model ?? "unknown"}" (~${best?.power_kw ?? "?"} kW). ` +
+            "Double-check the exact device and its typical running kW, and correct anything that's off.";
+      const r = await askVision(app.photo, REFINE_SYSTEM, userText, "/v1/messages refine");
+      if (r && typeof r.power_kw === "number" && r.type) {
+        if (!best || (r.confidence ?? 0) >= (best.confidence ?? 0)) best = r;
+        if ((r.confidence ?? 0) >= 0.8) break;
+      }
+    }
+    if (!best) return { researching: false };
+    const confident = (best.confidence ?? 0) >= 0.7;
+    return {
+      name: best.model || app.name,
+      type: TYPE_TO_UI[best.type] ?? "other",
+      kw: best.power_kw,
+      note: best.note || app.note,
+      approximate: !confident,
+      researching: false,
+    };
+  } catch {
+    return { researching: false };
+  }
+}
+
 function toAppliance(w: WireAppliance): Appliance {
   return {
     id: String(w.id),
@@ -373,120 +475,44 @@ let scanIdx = 0;
  */
 export async function scanAppliance(file?: File): Promise<ScanResult> {
   if (file) {
-    // Anthropic Messages API on the /hax bridge — send the photo + instructions,
-    // parse the JSON device config out of the reply.
-    const path = "/v1/messages";
-    const started = performance.now();
-
-    try {
-      const key = getInferenceKey();
-      const dataUrl = await fileToDataUrl(file);
-      const comma = dataUrl.indexOf(",");
-      const mediaType = /^data:([^;]+)/.exec(dataUrl)?.[1] || file.type || "image/jpeg";
-      const b64 = comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl;
-      // Compressed copy to keep with the device for the details view.
-      const photo = (await compressPhoto(dataUrl)) || undefined;
-
-      const res = await fetch(`${getApiBase()}${path}`, {
-        method: "POST",
-        cache: "no-store",
-        signal: AbortSignal.timeout(90000),
-        headers: {
-          "content-type": "application/json",
-          "anthropic-version": "2023-06-01",
-          ...(key ? { "x-api-key": key } : {}),
-        },
-        body: JSON.stringify({
-          model: SCAN_MODEL,
-          max_tokens: 400,
-          system: SCAN_SYSTEM,
-          messages: [
-            {
-              role: "user",
-              content: [
-                { type: "image", source: { type: "base64", media_type: mediaType, data: b64 } },
-                { type: "text", text: "Identify this appliance." },
-              ],
-            },
-          ],
-        }),
-      });
-      const durationMs = Math.round(performance.now() - started);
-      if (!res.ok) {
-        pushApiLog({
-          method: "POST",
-          path,
-          status: res.status,
-          ok: false,
-          durationMs,
-          source: "error",
-          error: `HTTP ${res.status}`,
-        });
-        throw new Error(`${path} -> HTTP ${res.status}`);
-      }
-      const msg = (await res.json()) as { content?: Array<{ type?: string; text?: string }> };
-      const text = (msg.content ?? [])
-        .filter((b) => b.type === "text")
-        .map((b) => b.text ?? "")
-        .join("")
-        .trim();
-      const parsed = parseScanJson(text);
-      // A 200 that isn't a device config (e.g. a bare proxy answer) is an
-      // endpoint failure, not a scan verdict.
-      if (!parsed || typeof parsed.power_kw !== "number" || !parsed.type) {
-        throw new Error(`${path} -> unparseable scan response`);
-      }
-      pushApiLog({
-        method: "POST",
-        path,
-        status: res.status,
-        ok: true,
-        durationMs,
-        source: "live",
-        summary: summarizeBody(parsed),
-      });
-
-      const mapped = toAppliance({
-        id: 0,
-        type: parsed.type,
-        model: parsed.model ?? "",
-        power_kw: parsed.power_kw,
-        note: parsed.note,
-      });
-      if (parsed.identified !== false) {
-        return {
-          identified: true,
-          // Nothing is persisted server-side (the bridge is stateless), so mint a
-          // client id; the My Home page prepends it to the local list.
-          appliance: { ...mapped, id: `scan-${Date.now().toString(36)}`, photo },
-          note: parsed.note,
-          source: "claude",
-          confidence: parsed.confidence,
-        };
-      }
-      return {
-        identified: false,
-        suggestion: { name: mapped.name, type: mapped.type, kw: mapped.kw, note: mapped.note, photo },
-        note: parsed.note,
-        source: "claude",
-        confidence: parsed.confidence,
-      };
-    } catch (err) {
-      const durationMs = Math.round(performance.now() - started);
-      if (!(err instanceof Error && /HTTP \d+/.test(err.message))) {
-        pushApiLog({
-          method: "POST",
-          path,
-          ok: false,
-          durationMs,
-          source: "error",
-          error: err instanceof Error ? err.message : String(err),
-        });
-      }
-      throw err;
+    const dataUrl = await fileToDataUrl(file);
+    // Compressed copy kept with the device for the details view + refine loop.
+    const photo = (await compressPhoto(dataUrl)) || undefined;
+    const parsed = await askVision(dataUrl, SCAN_SYSTEM, "Identify this appliance.", "/v1/messages scan");
+    // A 200 that isn't a device config (e.g. a bare proxy answer) is an endpoint
+    // failure, not a scan verdict.
+    if (!parsed || typeof parsed.power_kw !== "number" || !parsed.type) {
+      throw new Error("/v1/messages -> unparseable scan response");
     }
+
+    const conf = typeof parsed.confidence === "number" ? parsed.confidence : undefined;
+    // Unsure = the model said so, or it's not confident enough. Either way we
+    // still add the device (best-guess) and let the refine loop improve it.
+    const approximate = parsed.identified === false || (conf !== undefined && conf < 0.7);
+    const mapped = toAppliance({
+      id: 0,
+      type: parsed.type,
+      model: parsed.model ?? "",
+      power_kw: parsed.power_kw,
+      note: parsed.note,
+    });
+    const appliance: Appliance = {
+      ...mapped,
+      id: `scan-${Date.now().toString(36)}`,
+      photo,
+      approximate,
+      researching: approximate,
+    };
+    return {
+      identified: parsed.identified !== false,
+      appliance,
+      approximate,
+      note: parsed.note,
+      source: "claude",
+      confidence: conf,
+    };
   }
 
   const pick = SCAN_POOL[scanIdx++ % SCAN_POOL.length];
-  return { identified: true, appliance: await addAppliance(pick) };
+  return { identified: true, appliance: await addAppliance(pick), approximate: false };
 }

@@ -21,10 +21,7 @@ import type { Appliance } from "@/lib/types";
  * Upload photo sends the image to the backend inference path; Scan appliance
  * without a file stays on the mock rotating pool.
  */
-export function useScan(
-  onScanned: (a: Appliance) => void,
-  onUnidentified?: (suggestion: Omit<Appliance, "id">, note?: string) => void,
-) {
+export function useScan(onScanned: (a: Appliance) => void) {
   const reduce = useReducedMotion();
   const inputRef = useRef<HTMLInputElement>(null);   // gallery / files
   const cameraRef = useRef<HTMLInputElement>(null);  // live camera (capture)
@@ -49,18 +46,11 @@ export function useScan(
     try {
       const result = await scanAppliance(file ?? undefined);
       await minSweep;
-      if (result.identified && result.appliance) {
-        onScanned(result.appliance);
-      } else {
-        // The server DID reply — the model just couldn't identify the device.
-        // Route into manual entry, prefilled with its best-guess config.
-        setNotice(
-          "Couldn't identify it confidently — check the details below and add it manually.",
-        );
-        onUnidentified?.(
-          result.suggestion ?? { name: "", type: "other", kw: 1 },
-          result.note,
-        );
+      // Always add the device — even an unsure scan lands as a best guess that
+      // the refine loop then improves (no dead-end manual entry).
+      onScanned(result.appliance);
+      if (result.approximate) {
+        setNotice("Added as a best guess — refining the details…");
       }
     } catch {
       // Network / endpoint failure — the server never returned a scan verdict.

@@ -63,6 +63,8 @@ export interface Appliance {
   kw: number;
   note?: string;
   photo?: string; // compressed data URL of the scanned photo (for the details view)
+  approximate?: boolean; // data is a best-guess (agent loop wasn't fully confident)
+  researching?: boolean; // the refine loop is still working on this device
 }
 
 /**
@@ -75,10 +77,12 @@ export interface Appliance {
  */
 export interface ScanResult {
   identified: boolean;
-  appliance?: Appliance;
-  suggestion?: Omit<Appliance, "id">;
+  /** Always present — a best-guess device even when the model is unsure. */
+  appliance: Appliance;
+  /** True when the device is a best-guess; the refine loop then runs on it. */
+  approximate: boolean;
   note?: string;
-  source?: string; // inference | claude | hardware-match | fallback
+  source?: string; // claude | mock
   confidence?: number; // 0..1
 }
 

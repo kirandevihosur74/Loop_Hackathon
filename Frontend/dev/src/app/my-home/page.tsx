@@ -5,7 +5,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { Pill, SectionHeader } from "@/components/ui";
 import { Screen } from "@/components/layout/Screen";
 import { enter, noMotion } from "@/lib/motion";
-import { getAppliances, deleteAppliance } from "@/lib/data";
+import { getAppliances, deleteAppliance, refineAppliance } from "@/lib/data";
 import type { Appliance, ApplianceType } from "@/lib/types";
 import {
   ScanButton,
@@ -14,7 +14,7 @@ import {
   useScan,
 } from "@/components/myhome/ScanButton";
 import { ApplianceList } from "@/components/myhome/ApplianceList";
-import { AddApplianceForm, type ScanPrefill } from "@/components/myhome/AddApplianceForm";
+import { AddApplianceForm } from "@/components/myhome/AddApplianceForm";
 import {
   ImportBillButton,
   ImportBillSummary,
@@ -50,26 +50,31 @@ export default function MyHomePage() {
     };
   }, []);
 
-  // Set after a scan the model couldn't identify — opens manual entry prefilled.
-  const [scanPrefill, setScanPrefill] = useState<ScanPrefill | null>(null);
-
   function prepend(a: Appliance) {
     // New scans / manual adds land at the top so the enter animation is seen.
     setAppliances((prev) => (prev ? [a, ...prev] : [a]));
   }
 
-  const scan = useScan(prepend, (suggestion, note) =>
-    setScanPrefill({
-      name: suggestion.name,
-      type: suggestion.type,
-      kw: suggestion.kw,
-      photo: suggestion.photo,
-      note:
-        note ||
-        suggestion.note ||
-        "The scan couldn't identify this device — confirm the details and add it.",
-    }),
-  );
+  function updateDevice(id: string, patch: Partial<Appliance>) {
+    setAppliances((prev) => (prev ? prev.map((a) => (a.id === id ? { ...a, ...patch } : a)) : prev));
+  }
+
+  // A scan always adds a device. If it's a best guess, kick the refine loop and
+  // patch the device in place when it settles (the row shows orange meanwhile).
+  // Only apply the loop's result if the user hasn't already reviewed/edited it
+  // (editing clears `researching`), so we never clobber a manual correction.
+  function handleScanned(a: Appliance) {
+    prepend(a);
+    if (a.approximate) {
+      refineAppliance(a).then((patch) =>
+        setAppliances((prev) =>
+          prev ? prev.map((x) => (x.id === a.id && x.researching ? { ...x, ...patch } : x)) : prev,
+        ),
+      );
+    }
+  }
+
+  const scan = useScan(handleScanned);
   const bill = useBillImport();
 
   const filtered = useMemo(() => {
@@ -164,18 +169,12 @@ export default function MyHomePage() {
         {appliances === null ? (
           <ApplianceListSkeleton />
         ) : (
-          <ApplianceList appliances={filtered} onDelete={handleDelete} />
+          <ApplianceList appliances={filtered} onDelete={handleDelete} onUpdate={updateDevice} />
         )}
       </div>
 
       <div className="mt-4">
-        <AddApplianceForm
-          onAdded={(a) => {
-            setScanPrefill(null); // handoff complete — clear the scan hint
-            prepend(a);
-          }}
-          prefill={scanPrefill}
-        />
+        <AddApplianceForm onAdded={prepend} />
       </div>
 
       {/* Tap "Powerfly · local build" 5× to open live API logging / base URL. */}

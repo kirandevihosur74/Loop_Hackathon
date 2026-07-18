@@ -422,7 +422,7 @@ export async function scanAppliance(file?: File): Promise<ScanResult> {
   void file;
   const next = SCAN_POOL[scanIdx % SCAN_POOL.length];
   scanIdx++;
-  return { identified: true, appliance: await addAppliance(next), source: "mock" };
+  return { identified: true, appliance: await addAppliance(next), approximate: false, source: "mock" };
 }
 
 export async function deleteAppliance(id: string): Promise<void> {

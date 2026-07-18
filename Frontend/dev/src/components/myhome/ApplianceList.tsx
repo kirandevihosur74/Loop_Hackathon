@@ -61,13 +61,17 @@ function TrashIcon() {
 export function ApplianceList({
   appliances,
   onDelete,
+  onUpdate,
 }: {
   appliances: Appliance[];
   onDelete: (id: string) => void;
+  onUpdate?: (id: string, patch: Partial<Appliance>) => void;
 }) {
   const reduce = useReducedMotion();
   const variants = reduce ? noMotion : rowVariants;
-  const [selected, setSelected] = useState<Appliance | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Derive from the live list so refine-loop updates + edits show in the open modal.
+  const selected = selectedId ? (appliances.find((a) => a.id === selectedId) ?? null) : null;
 
   if (appliances.length === 0) {
     return (
@@ -83,7 +87,9 @@ export function ApplianceList({
       {/* No `initial={false}`: the first batch animates in (staggered by index),
           while later prepends/deletes animate individually. */}
       <AnimatePresence>
-        {appliances.map((a, i) => (
+        {appliances.map((a, i) => {
+          const unsure = Boolean(a.approximate || a.researching);
+          return (
           <motion.li
             key={a.id}
             layout={!reduce}
@@ -97,15 +103,21 @@ export function ApplianceList({
                 : { opacity: 0, height: 0, marginTop: 0, transition: { duration: 0.24, ease } }
             }
           >
-            <Card className="flex items-center gap-1 p-2">
+            <Card
+              className="flex items-center gap-1 p-2"
+              style={unsure ? { boxShadow: "inset 0 0 0 1.5px #fb923c" } : undefined}
+            >
               <button
                 type="button"
-                onClick={() => setSelected(a)}
+                onClick={() => setSelectedId(a.id)}
                 aria-label={`View details for ${a.name}`}
                 className="flex min-w-0 flex-1 items-center gap-3 rounded-md p-1 text-left transition-colors hover:bg-bg active:scale-[0.99]"
               >
                 <span
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-gold-tint text-gold-deep"
+                  className={cn(
+                    "flex h-11 w-11 shrink-0 items-center justify-center rounded-md",
+                    unsure ? "bg-orange-500/15 text-orange-500" : "bg-gold-tint text-gold-deep",
+                  )}
                   aria-hidden="true"
                 >
                   <TypeIcon type={a.type} className="h-5 w-5" />
@@ -113,9 +125,19 @@ export function ApplianceList({
 
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-semibold text-ink">{a.name}</span>
-                  <span className="block truncate text-xs text-sub">
-                    {TYPE_LABEL[a.type]}
-                    {a.note ? ` · ${a.note}` : ""}
+                  <span className="block truncate text-xs">
+                    {a.researching ? (
+                      <span className="animate-pulse font-medium text-orange-500">
+                        ● Refining details…
+                      </span>
+                    ) : a.approximate ? (
+                      <span className="font-medium text-orange-500">≈ Approximate — tap to review</span>
+                    ) : (
+                      <span className="text-sub">
+                        {TYPE_LABEL[a.type]}
+                        {a.note ? ` · ${a.note}` : ""}
+                      </span>
+                    )}
                   </span>
                 </span>
 
@@ -137,10 +159,15 @@ export function ApplianceList({
               </button>
             </Card>
           </motion.li>
-        ))}
+          );
+        })}
       </AnimatePresence>
     </ul>
-    <DeviceDetailsModal appliance={selected} onClose={() => setSelected(null)} />
+    <DeviceDetailsModal
+      appliance={selected}
+      onClose={() => setSelectedId(null)}
+      onUpdate={onUpdate}
+    />
     </>
   );
 }

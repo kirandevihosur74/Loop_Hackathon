@@ -141,6 +141,11 @@ export async function scanAppliance(file?: File): Promise<ScanResult> {
   );
 }
 
+/** Agent loop that improves an uncertain (approximate) device's data. */
+export async function refineAppliance(app: Appliance): Promise<Partial<Appliance>> {
+  return api.refineAppliance(app);
+}
+
 /** Remove an appliance by id. */
 export async function deleteAppliance(id: string): Promise<void> {
   return live(
