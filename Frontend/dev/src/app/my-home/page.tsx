@@ -14,7 +14,7 @@ import {
   useScan,
 } from "@/components/myhome/ScanButton";
 import { ApplianceList } from "@/components/myhome/ApplianceList";
-import { AddApplianceForm } from "@/components/myhome/AddApplianceForm";
+import { AddApplianceForm, type ScanPrefill } from "@/components/myhome/AddApplianceForm";
 import {
   ImportBillButton,
   ImportBillSummary,
@@ -50,12 +50,25 @@ export default function MyHomePage() {
     };
   }, []);
 
+  // Set after a scan the model couldn't identify — opens manual entry prefilled.
+  const [scanPrefill, setScanPrefill] = useState<ScanPrefill | null>(null);
+
   function prepend(a: Appliance) {
     // New scans / manual adds land at the top so the enter animation is seen.
     setAppliances((prev) => (prev ? [a, ...prev] : [a]));
   }
 
-  const scan = useScan(prepend);
+  const scan = useScan(prepend, (suggestion, note) =>
+    setScanPrefill({
+      name: suggestion.name,
+      type: suggestion.type,
+      kw: suggestion.kw,
+      note:
+        note ||
+        suggestion.note ||
+        "The scan couldn't identify this device — confirm the details and add it.",
+    }),
+  );
   const bill = useBillImport();
 
   const filtered = useMemo(() => {
@@ -116,7 +129,12 @@ export default function MyHomePage() {
         The agent reads your bill to learn your habits and plan around your rate plan.
       </p>
 
-      <ScanSweep scanning={scan.scanning} previewUrl={scan.previewUrl} error={scan.error} />
+      <ScanSweep
+        scanning={scan.scanning}
+        previewUrl={scan.previewUrl}
+        error={scan.error}
+        notice={scan.notice}
+      />
       <ImportBillSummary inputId={bill.inputId} phase={bill.phase} summary={bill.summary} />
 
       <div className="mt-5">
@@ -150,7 +168,13 @@ export default function MyHomePage() {
       </div>
 
       <div className="mt-4">
-        <AddApplianceForm onAdded={prepend} />
+        <AddApplianceForm
+          onAdded={(a) => {
+            setScanPrefill(null); // handoff complete — clear the scan hint
+            prepend(a);
+          }}
+          prefill={scanPrefill}
+        />
       </div>
 
       {/* Tap "Powerfly · local build" 5× to open live API logging / base URL. */}

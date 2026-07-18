@@ -18,6 +18,7 @@ import type {
   GridState,
   LedgerEntry,
   Nudge,
+  ScanResult,
 } from "@/lib/types";
 import { getApiBase, pushApiLog, summarizeBody } from "@/lib/devLog";
 
@@ -151,6 +152,24 @@ interface WireAppliance {
   model: string;
   power_kw: number;
   note?: string;
+}
+
+/**
+ * Wire shape of POST /household/{id}/appliances/scan (see backend/app/api/routers/household.py).
+ * `id` is null when the model couldn't identify the device (nothing persisted);
+ * `identified` is explicit on newer backends, and derivable from `source` on older ones.
+ */
+interface WireScanResponse {
+  id: number | null;
+  type: string;
+  model: string;
+  power_kw: number;
+  flexible?: boolean;
+  household_id?: number;
+  note?: string;
+  source?: string; // inference | claude | hardware-match | fallback
+  confidence?: number;
+  identified?: boolean;
 }
 
 function toAppliance(w: WireAppliance): Appliance {
@@ -290,9 +309,11 @@ let scanIdx = 0;
 /**
  * Detect an appliance.
  * - With a photo: POST multipart to `/appliances/scan` (inference → persisted row).
+ *   Resolves with `identified: false` + a prefill `suggestion` when the model
+ *   couldn't identify the device; THROWS only on network / endpoint failure.
  * - Without: rotate SCAN_POOL and POST via addAppliance (survives reload).
  */
-export async function scanAppliance(file?: File): Promise<Appliance> {
+export async function scanAppliance(file?: File): Promise<ScanResult> {
   if (file) {
     const path = `/household/${HOUSEHOLD}/appliances/scan`;
     const form = new FormData();
@@ -319,7 +340,12 @@ export async function scanAppliance(file?: File): Promise<Appliance> {
         });
         throw new Error(`${path} -> HTTP ${res.status}`);
       }
-      const row = (await res.json()) as WireAppliance;
+      const row = (await res.json()) as WireScanResponse;
+      // A 200 that isn't a device config (e.g. a proxy answering for the
+      // backend) counts as an endpoint failure, not a scan verdict.
+      if (!row || typeof row !== "object" || typeof row.power_kw !== "number" || !row.type) {
+        throw new Error(`${path} -> unexpected response shape`);
+      }
       pushApiLog({
         method: "POST",
         path,
@@ -329,7 +355,32 @@ export async function scanAppliance(file?: File): Promise<Appliance> {
         source: "live",
         summary: summarizeBody(row),
       });
-      return toAppliance(row);
+
+      const identified =
+        row.identified ?? (row.source ? row.source !== "fallback" : row.id != null);
+      const mapped = toAppliance({
+        id: row.id ?? 0,
+        type: row.type,
+        model: row.model,
+        power_kw: row.power_kw,
+        note: row.note,
+      });
+      if (identified && row.id != null) {
+        return {
+          identified: true,
+          appliance: mapped,
+          note: row.note,
+          source: row.source,
+          confidence: row.confidence,
+        };
+      }
+      return {
+        identified: false,
+        suggestion: { name: mapped.name, type: mapped.type, kw: mapped.kw, note: mapped.note },
+        note: row.note,
+        source: row.source,
+        confidence: row.confidence,
+      };
     } catch (err) {
       const durationMs = Math.round(performance.now() - started);
       if (!(err instanceof Error && /HTTP \d+/.test(err.message))) {
@@ -347,5 +398,5 @@ export async function scanAppliance(file?: File): Promise<Appliance> {
   }
 
   const pick = SCAN_POOL[scanIdx++ % SCAN_POOL.length];
-  return addAppliance(pick);
+  return { identified: true, appliance: await addAppliance(pick) };
 }

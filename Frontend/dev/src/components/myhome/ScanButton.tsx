@@ -10,13 +10,21 @@ import type { Appliance } from "@/lib/types";
 
 /**
  * Scan / photo-upload behavior. On scan() (stub camera) or after picking an
- * image it plays a brief sweep, then awaits scanAppliance(file?) and hands the
- * detected appliance up to the parent to prepend to the list.
+ * image it plays a sweep for the WHOLE inference round-trip, then awaits
+ * scanAppliance(file?) and branches on the result:
+ * - identified → hands the appliance up to the parent to prepend to the list.
+ * - server replied but couldn't identify → onUnidentified(suggestion, note) so
+ *   the parent can open the manual Add Appliance form prefilled (no dead end).
+ * - network / endpoint failure → an explicit "couldn't reach" error (never the
+ *   "couldn't identify" copy — that would blame the photo for an outage).
  *
  * Upload photo sends the image to the backend inference path; Scan appliance
  * without a file stays on the mock rotating pool.
  */
-export function useScan(onScanned: (a: Appliance) => void) {
+export function useScan(
+  onScanned: (a: Appliance) => void,
+  onUnidentified?: (suggestion: Omit<Appliance, "id">, note?: string) => void,
+) {
   const reduce = useReducedMotion();
   const inputRef = useRef<HTMLInputElement>(null);   // gallery / files
   const cameraRef = useRef<HTMLInputElement>(null);  // live camera (capture)
@@ -25,23 +33,41 @@ export function useScan(onScanned: (a: Appliance) => void) {
   const [scanning, setScanning] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   async function detect(file: File | null, nextPreview: string | null = null) {
     if (scanning) return;
     setScanning(true);
     setError(null);
+    setNotice(null);
     setPreviewUrl(nextPreview);
+    // Keep the sweep visible at least this long — success OR failure — so a
+    // fast server reply (or an instant network error) never flashes the UI.
+    const minSweep = reduce
+      ? Promise.resolve()
+      : new Promise((r) => setTimeout(r, 1500));
     try {
-      const minSweep = reduce ? Promise.resolve() : new Promise((r) => setTimeout(r, 1500));
-      const [detected] = await Promise.all([
-        scanAppliance(file ?? undefined),
-        minSweep,
-      ]);
-      onScanned(detected);
+      const result = await scanAppliance(file ?? undefined);
+      await minSweep;
+      if (result.identified && result.appliance) {
+        onScanned(result.appliance);
+      } else {
+        // The server DID reply — the model just couldn't identify the device.
+        // Route into manual entry, prefilled with its best-guess config.
+        setNotice(
+          "Couldn't identify it confidently — check the details below and add it manually.",
+        );
+        onUnidentified?.(
+          result.suggestion ?? { name: "", type: "other", kw: 1 },
+          result.note,
+        );
+      }
     } catch {
+      // Network / endpoint failure — the server never returned a scan verdict.
+      await minSweep;
       setError(
         file
-          ? "Couldn't identify that appliance. Try a clearer photo or nameplate shot."
+          ? "Couldn't reach the scan service — check your connection and try again, or add the appliance manually below."
           : "Scan failed — try again in a moment.",
       );
     } finally {
@@ -74,6 +100,7 @@ export function useScan(onScanned: (a: Appliance) => void) {
   return {
     scanning,
     error,
+    notice,
     previewUrl,
     inputRef,
     inputId,
@@ -171,17 +198,22 @@ export function UploadPhotoButton({
   );
 }
 
-/** The simulated-scan viewfinder sweep — renders full-width below the row. */
+/** The simulated-scan viewfinder sweep — renders full-width below the row.
+ * Stays mounted for the entire inference round-trip (useScan keeps `scanning`
+ * true until the server replies or fails). */
 export function ScanSweep({
   scanning,
   previewUrl,
   error,
+  notice,
 }: {
   scanning: boolean;
   previewUrl?: string | null;
   error?: string | null;
+  notice?: string | null;
 }) {
   const reduce = useReducedMotion();
+  const statusLabel = previewUrl ? "Analyzing photo…" : "Detecting appliance…";
 
   return (
     <>
@@ -193,6 +225,8 @@ export function ScanSweep({
             exit={reduce ? { opacity: 0 } : { opacity: 0, height: 0 }}
             transition={{ duration: 0.28, ease }}
             className="overflow-hidden"
+            role="status"
+            aria-live="polite"
           >
             <div className="mt-3 flex h-28 items-center justify-center overflow-hidden rounded-md bg-card shadow-soft ring-1 ring-line">
               <div className="relative h-full w-full">
@@ -215,22 +249,32 @@ export function ScanSweep({
 
                 {reduce ? (
                   <div className="relative flex h-full items-center justify-center">
-                    <span className="text-sm font-semibold text-sub">Detecting appliance…</span>
+                    <span className="text-sm font-semibold text-sub">{statusLabel}</span>
                   </div>
                 ) : (
-                  <motion.div
-                    aria-hidden="true"
-                    className="absolute inset-x-6 h-0.5 rounded-pill"
-                    style={{
-                      background: `linear-gradient(90deg, transparent, ${cssVar.gold}, transparent)`,
-                    }}
-                    initial={{ top: "18%" }}
-                    animate={{ top: ["18%", "82%", "18%"] }}
-                    transition={{ duration: 1.4, ease, repeat: Infinity }}
-                  />
+                  <>
+                    <motion.div
+                      aria-hidden="true"
+                      className="absolute inset-x-6 h-0.5 rounded-pill"
+                      style={{
+                        background: `linear-gradient(90deg, transparent, ${cssVar.gold}, transparent)`,
+                      }}
+                      initial={{ top: "18%" }}
+                      animate={{ top: ["18%", "82%", "18%"] }}
+                      transition={{ duration: 1.4, ease, repeat: Infinity }}
+                    />
+                    <span className="absolute inset-x-0 bottom-1.5 text-center text-xs font-semibold text-sub">
+                      {statusLabel}
+                    </span>
+                  </>
                 )}
               </div>
             </div>
+            {previewUrl && (
+              <p className="mt-1.5 text-xs text-sub">
+                Analyzing photo — identifying the appliance can take up to a minute.
+              </p>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -238,6 +282,12 @@ export function ScanSweep({
       {error && !scanning && (
         <p className="mt-2 text-xs text-peak" role="alert">
           {error}
+        </p>
+      )}
+
+      {notice && !error && !scanning && (
+        <p className="mt-2 text-xs text-sub" role="status">
+          {notice}
         </p>
       )}
     </>

@@ -64,6 +64,23 @@ export interface Appliance {
   note?: string;
 }
 
+/**
+ * Outcome of a photo/stub appliance scan.
+ * - `identified: true` → `appliance` is the persisted device row; add it to the list.
+ * - `identified: false` → the server replied but the model could not confidently
+ *   identify the device; `suggestion` is its best-guess default config, meant to
+ *   prefill the manual Add Appliance form (nothing was persisted).
+ * A network / endpoint failure is NOT a ScanResult — it throws instead.
+ */
+export interface ScanResult {
+  identified: boolean;
+  appliance?: Appliance;
+  suggestion?: Omit<Appliance, "id">;
+  note?: string;
+  source?: string; // inference | claude | hardware-match | fallback
+  confidence?: number; // 0..1
+}
+
 export interface AgentCheck {
   id: string;
   label: string;

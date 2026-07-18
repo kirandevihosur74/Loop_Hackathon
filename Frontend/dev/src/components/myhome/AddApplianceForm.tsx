@@ -1,11 +1,20 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Card, GhostButton, PrimaryButton } from "@/components/ui";
 import { addAppliance } from "@/lib/data";
 import { ease } from "@/lib/motion";
 import type { Appliance, ApplianceType } from "@/lib/types";
+
+/** Best-guess values a failed photo scan hands over to manual entry. */
+export interface ScanPrefill {
+  name?: string;
+  type?: ApplianceType;
+  kw?: number;
+  /** Why the scan handed off (shown as a hint inside the form). */
+  note?: string;
+}
 
 const TYPE_OPTIONS: { value: ApplianceType; label: string }[] = [
   { value: "ev", label: "EV" },
@@ -16,8 +25,16 @@ const TYPE_OPTIONS: { value: ApplianceType; label: string }[] = [
   { value: "other", label: "Other" },
 ];
 
-export function AddApplianceForm({ onAdded }: { onAdded: (a: Appliance) => void }) {
+export function AddApplianceForm({
+  onAdded,
+  prefill,
+}: {
+  onAdded: (a: Appliance) => void;
+  /** When set (e.g. after an unidentified scan), the form opens prefilled. */
+  prefill?: ScanPrefill | null;
+}) {
   const reduce = useReducedMotion();
+  const rootRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [type, setType] = useState<ApplianceType>("kitchen");
@@ -27,6 +44,19 @@ export function AddApplianceForm({ onAdded }: { onAdded: (a: Appliance) => void 
   const nameId = useId();
   const typeId = useId();
   const kwId = useId();
+
+  // Scan → manual handoff: open the form with the scanner's best guess so the
+  // user only has to confirm/correct, never start from a dead end.
+  useEffect(() => {
+    if (!prefill) return;
+    setOpen(true);
+    setName(prefill.name ?? "");
+    if (prefill.type) setType(prefill.type);
+    if (prefill.kw !== undefined && Number.isFinite(prefill.kw) && prefill.kw > 0) {
+      setKw(String(prefill.kw));
+    }
+    rootRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [prefill]);
 
   const kwNum = Number(kw);
   const valid = name.trim().length > 0 && kw.trim().length > 0 && Number.isFinite(kwNum) && kwNum > 0;
@@ -51,7 +81,7 @@ export function AddApplianceForm({ onAdded }: { onAdded: (a: Appliance) => void 
     "min-h-[44px] w-full rounded-md bg-card px-3 text-sm text-ink ring-1 ring-line focus:outline-none focus-visible:ring-2 focus-visible:ring-gold";
 
   return (
-    <div>
+    <div ref={rootRef}>
       <GhostButton
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
@@ -70,6 +100,11 @@ export function AddApplianceForm({ onAdded }: { onAdded: (a: Appliance) => void 
             className="overflow-hidden"
           >
             <Card className="mt-3">
+              {prefill?.note && (
+                <p className="mb-3 text-xs text-sub" role="note">
+                  {prefill.note}
+                </p>
+              )}
               <form onSubmit={handleSubmit} className="flex flex-col gap-3">
                 <div>
                   <label htmlFor={nameId} className="mb-1 block text-xs font-semibold text-sub">

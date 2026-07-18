@@ -59,8 +59,13 @@ async def scan_appliance(
     """Identify an appliance from a photo and persist it on the household.
 
     Resolution: INFERENCE_URL → Claude vision → hardware-analytics image match → fallback.
-    Response matches the Appliance row plus optional `note` / `source` / `confidence`
-    for the My Home UI (note is not stored on the Appliance table).
+    Response matches the Appliance row plus `identified` / `note` / `source` /
+    `confidence` for the My Home UI (note is not stored on the Appliance table).
+
+    When the chain bottoms out on the generic fallback the model genuinely could
+    not identify the device: nothing is persisted, `identified` is false, `id` is
+    null, and the default config (type/model/power_kw) is returned so the client
+    can prefill its manual Add Appliance form.
     """
     if not session.get(Household, household_id):
         raise HTTPException(404, "household not found")
@@ -83,6 +88,23 @@ async def scan_appliance(
         content_type=content_type or "image/jpeg",
     )
 
+    identified = detected.source != "fallback"
+    if not identified:
+        # Genuine "couldn't identify" — don't persist a guess; hand the client a
+        # sensible default config to prefill manual entry with.
+        return {
+            "id": None,
+            "identified": False,
+            "type": detected.type,
+            "model": detected.model,
+            "power_kw": detected.power_kw,
+            "flexible": True,
+            "household_id": household_id,
+            "note": detected.note,
+            "source": detected.source,
+            "confidence": detected.confidence,
+        }
+
     appliance = Appliance(
         household_id=household_id,
         type=detected.type,
@@ -96,6 +118,7 @@ async def scan_appliance(
 
     return {
         "id": appliance.id,
+        "identified": True,
         "type": appliance.type,
         "model": appliance.model,
         "power_kw": appliance.power_kw,

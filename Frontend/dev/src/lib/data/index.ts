@@ -18,6 +18,7 @@ import type {
   LedgerEntry,
   Nudge,
   PricePoint,
+  ScanResult,
   StatsSummary,
   UsagePoint,
 } from "@/lib/types";
@@ -122,8 +123,13 @@ export async function addAppliance(a: Omit<Appliance, "id">): Promise<Appliance>
   );
 }
 
-/** Detect an appliance from a photo, or stub-scan without a file (both persist via backend when live). */
-export async function scanAppliance(file?: File): Promise<Appliance> {
+/**
+ * Detect an appliance from a photo, or stub-scan without a file (both persist via
+ * backend when live). Resolves with `identified: false` + a manual-entry prefill
+ * when the model couldn't identify the device; throws only on network/endpoint
+ * failure (strict live) — callers must treat those two outcomes differently.
+ */
+export async function scanAppliance(file?: File): Promise<ScanResult> {
   return live(
     () => api.scanAppliance(file),
     () => mock.scanAppliance(file),

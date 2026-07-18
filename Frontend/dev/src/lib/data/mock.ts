@@ -20,6 +20,7 @@ import type {
   LedgerEntry,
   Nudge,
   PricePoint,
+  ScanResult,
   StatsSummary,
   UsagePoint,
 } from "@/lib/types";
@@ -415,13 +416,13 @@ export async function addAppliance(a: Omit<Appliance, "id">): Promise<Appliance>
 
 /** Convenience for the "scan an appliance" flow — returns the next detected device.
  * When a photo is provided we still use the pool (offline mock); the live API
- * path in `api.ts` does real inference.
+ * path in `api.ts` does real inference. Mock scans are always "identified".
  */
-export async function scanAppliance(file?: File): Promise<Appliance> {
+export async function scanAppliance(file?: File): Promise<ScanResult> {
   void file;
   const next = SCAN_POOL[scanIdx % SCAN_POOL.length];
   scanIdx++;
-  return addAppliance(next);
+  return { identified: true, appliance: await addAppliance(next), source: "mock" };
 }
 
 export async function deleteAppliance(id: string): Promise<void> {
