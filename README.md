@@ -58,10 +58,6 @@ cp .env.example .env                                   # optional — runs keyle
 PYTHONPATH=. .venv/bin/uvicorn app.main:app --reload   # http://127.0.0.1:8000/docs
 ```
 
-Runs **without any API key**: real **CAISO** prices (OASIS is keyless) + a rule-based
-mock brain. Add `ANTHROPIC_API_KEY` for real Claude reasoning. Set `USE_MOCK_DATA=true`
-to force the offline mock price curve; add `NEXLA_SINK_URL` to prefer a Nexla sink.
-
 ### Live demo in 20 seconds
 ```bash
 ./demo.sh          # from repo root, with the server running
