@@ -58,11 +58,6 @@ cp .env.example .env                                   # optional — runs keyle
 PYTHONPATH=. .venv/bin/uvicorn app.main:app --reload   # http://127.0.0.1:8000/docs
 ```
 
-### Live demo in 20 seconds
-```bash
-./demo.sh          # from repo root, with the server running
-```
-
 ---
 
 ## API contracts
