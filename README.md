@@ -28,7 +28,7 @@ they integrate against the contract endpoints below.
 
 ---
 
-## The loop (one cycle)
+## Agent Loop
 
 `LoopEngine.run_cycle()` → `backend/app/loop/engine.py`
 
