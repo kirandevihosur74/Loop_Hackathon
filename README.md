@@ -74,8 +74,6 @@ PYTHONPATH=. .venv/bin/uvicorn app.main:app --reload   # http://127.0.0.1:8000/d
 | `POST /household/{id}/appliances/scan` | Multipart photo → identify + add appliance |
 | `GET /health` | Which brain / data source is live |
 
-Full schema at `/docs` (Swagger).
-
 ---
 
 ## Data model
