@@ -20,7 +20,7 @@ import type {
   Nudge,
   ScanResult,
 } from "@/lib/types";
-import { getApiBase, pushApiLog, summarizeBody } from "@/lib/devLog";
+import { getApiBase, getInferenceKey, pushApiLog, summarizeBody } from "@/lib/devLog";
 
 const HOUSEHOLD = 1;
 
@@ -155,21 +155,47 @@ interface WireAppliance {
 }
 
 /**
- * Wire shape of POST /household/{id}/appliances/scan (see backend/app/api/routers/household.py).
- * `id` is null when the model couldn't identify the device (nothing persisted);
- * `identified` is explicit on newer backends, and derivable from `source` on older ones.
+ * Photo appliance ID runs on the inference bridge (/hax) — an Anthropic
+ * Messages API endpoint (vision, no tools). We send the image + instructions
+ * and the model replies with a JSON device config we parse below.
  */
-interface WireScanResponse {
-  id: number | null;
+const SCAN_MODEL = "claude-haiku-4-5-20251001";
+const SCAN_SYSTEM =
+  `You identify home electrical appliances for an energy app. Look at the photo and respond with ONLY a ` +
+  `JSON object (no markdown, no prose): {"identified":boolean,"type":one of ` +
+  `[ev_charger,ac,dishwasher,washer,dryer,kitchen,electronics,other],"model":string,` +
+  `"power_kw":number,"flexible":boolean,"confidence":number,"note":string}. power_kw = typical running ` +
+  `power in kW. If no appliance is clearly visible set identified=false and give a best-guess generic row.`;
+
+interface ScanJson {
+  identified?: boolean;
   type: string;
-  model: string;
+  model?: string;
   power_kw: number;
   flexible?: boolean;
-  household_id?: number;
-  note?: string;
-  source?: string; // inference | claude | hardware-match | fallback
   confidence?: number;
-  identified?: boolean;
+  note?: string;
+}
+
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error ?? new Error("file read failed"));
+    reader.readAsDataURL(file);
+  });
+}
+
+/** Pull the JSON object out of the model's reply (tolerates ```json fences / prose). */
+function parseScanJson(text: string): ScanJson | null {
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  if (start < 0 || end <= start) return null;
+  try {
+    return JSON.parse(text.slice(start, end + 1)) as ScanJson;
+  } catch {
+    return null;
+  }
 }
 
 function toAppliance(w: WireAppliance): Appliance {
@@ -308,24 +334,49 @@ let scanIdx = 0;
 
 /**
  * Detect an appliance.
- * - With a photo: POST multipart to `/appliances/scan` (inference → persisted row).
- *   Resolves with `identified: false` + a prefill `suggestion` when the model
- *   couldn't identify the device; THROWS only on network / endpoint failure.
+ * - With a photo: send it to the /hax inference bridge (Anthropic Messages API,
+ *   vision) and parse the JSON device config from the reply. Resolves with
+ *   `identified: false` + a prefill `suggestion` when the model couldn't identify
+ *   the device; THROWS only on network / endpoint failure.
  * - Without: rotate SCAN_POOL and POST via addAppliance (survives reload).
  */
 export async function scanAppliance(file?: File): Promise<ScanResult> {
   if (file) {
-    const path = `/household/${HOUSEHOLD}/appliances/scan`;
-    const form = new FormData();
-    form.append("file", file);
+    // Anthropic Messages API on the /hax bridge — send the photo + instructions,
+    // parse the JSON device config out of the reply.
+    const path = "/v1/messages";
     const started = performance.now();
 
     try {
+      const key = getInferenceKey();
+      const dataUrl = await fileToDataUrl(file);
+      const comma = dataUrl.indexOf(",");
+      const mediaType = /^data:([^;]+)/.exec(dataUrl)?.[1] || file.type || "image/jpeg";
+      const b64 = comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl;
+
       const res = await fetch(`${getApiBase()}${path}`, {
         method: "POST",
-        body: form,
         cache: "no-store",
         signal: AbortSignal.timeout(90000),
+        headers: {
+          "content-type": "application/json",
+          "anthropic-version": "2023-06-01",
+          ...(key ? { "x-api-key": key } : {}),
+        },
+        body: JSON.stringify({
+          model: SCAN_MODEL,
+          max_tokens: 400,
+          system: SCAN_SYSTEM,
+          messages: [
+            {
+              role: "user",
+              content: [
+                { type: "image", source: { type: "base64", media_type: mediaType, data: b64 } },
+                { type: "text", text: "Identify this appliance." },
+              ],
+            },
+          ],
+        }),
       });
       const durationMs = Math.round(performance.now() - started);
       if (!res.ok) {
@@ -340,11 +391,17 @@ export async function scanAppliance(file?: File): Promise<ScanResult> {
         });
         throw new Error(`${path} -> HTTP ${res.status}`);
       }
-      const row = (await res.json()) as WireScanResponse;
-      // A 200 that isn't a device config (e.g. a proxy answering for the
-      // backend) counts as an endpoint failure, not a scan verdict.
-      if (!row || typeof row !== "object" || typeof row.power_kw !== "number" || !row.type) {
-        throw new Error(`${path} -> unexpected response shape`);
+      const msg = (await res.json()) as { content?: Array<{ type?: string; text?: string }> };
+      const text = (msg.content ?? [])
+        .filter((b) => b.type === "text")
+        .map((b) => b.text ?? "")
+        .join("")
+        .trim();
+      const parsed = parseScanJson(text);
+      // A 200 that isn't a device config (e.g. a bare proxy answer) is an
+      // endpoint failure, not a scan verdict.
+      if (!parsed || typeof parsed.power_kw !== "number" || !parsed.type) {
+        throw new Error(`${path} -> unparseable scan response`);
       }
       pushApiLog({
         method: "POST",
@@ -353,33 +410,33 @@ export async function scanAppliance(file?: File): Promise<ScanResult> {
         ok: true,
         durationMs,
         source: "live",
-        summary: summarizeBody(row),
+        summary: summarizeBody(parsed),
       });
 
-      const identified =
-        row.identified ?? (row.source ? row.source !== "fallback" : row.id != null);
       const mapped = toAppliance({
-        id: row.id ?? 0,
-        type: row.type,
-        model: row.model,
-        power_kw: row.power_kw,
-        note: row.note,
+        id: 0,
+        type: parsed.type,
+        model: parsed.model ?? "",
+        power_kw: parsed.power_kw,
+        note: parsed.note,
       });
-      if (identified && row.id != null) {
+      if (parsed.identified !== false) {
         return {
           identified: true,
-          appliance: mapped,
-          note: row.note,
-          source: row.source,
-          confidence: row.confidence,
+          // Nothing is persisted server-side (the bridge is stateless), so mint a
+          // client id; the My Home page prepends it to the local list.
+          appliance: { ...mapped, id: `scan-${Date.now().toString(36)}` },
+          note: parsed.note,
+          source: "claude",
+          confidence: parsed.confidence,
         };
       }
       return {
         identified: false,
         suggestion: { name: mapped.name, type: mapped.type, kw: mapped.kw, note: mapped.note },
-        note: row.note,
-        source: row.source,
-        confidence: row.confidence,
+        note: parsed.note,
+        source: "claude",
+        confidence: parsed.confidence,
       };
     } catch (err) {
       const durationMs = Math.round(performance.now() - started);

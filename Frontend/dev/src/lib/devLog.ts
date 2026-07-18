@@ -110,6 +110,30 @@ export function setApiBase(url: string) {
   notify();
 }
 
+const INFERENCE_KEY_KEY = "powerfly.inferenceKey";
+
+/** API key for the inference bridge (/hax). Runtime override (Developer settings)
+ * wins over the build-time NEXT_PUBLIC_INFERENCE_KEY. Empty string = not set. */
+export function getInferenceKey(): string {
+  if (typeof window !== "undefined") {
+    try {
+      const override = window.localStorage.getItem(INFERENCE_KEY_KEY)?.trim();
+      if (override) return override;
+    } catch {
+      /* private mode */
+    }
+  }
+  return (process.env.NEXT_PUBLIC_INFERENCE_KEY ?? "").trim();
+}
+
+export function setInferenceKey(key: string) {
+  if (typeof window === "undefined") return;
+  const cleaned = key.trim();
+  if (cleaned) window.localStorage.setItem(INFERENCE_KEY_KEY, cleaned);
+  else window.localStorage.removeItem(INFERENCE_KEY_KEY);
+  notify();
+}
+
 /** When true, photo scan / writes never silently fall back to mock. */
 export function getStrictLive(): boolean {
   if (typeof window === "undefined") return true;

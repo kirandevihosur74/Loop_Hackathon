@@ -6,8 +6,10 @@ import {
   clearApiLogs,
   getApiBase,
   getApiLogs,
+  getInferenceKey,
   getStrictLive,
   setApiBase,
+  setInferenceKey,
   setStrictLive,
   subscribeApiLog,
   type ApiLogEntry,
@@ -65,6 +67,7 @@ export function DeveloperSettings() {
 
 function DeveloperPanel({ onClose }: { onClose: () => void }) {
   const [base, setBase] = useState(getApiBase);
+  const [apiKey, setApiKey] = useState(getInferenceKey);
   const [strict, setStrict] = useState(getStrictLive);
   const [logs, setLogs] = useState<ApiLogEntry[]>(() => getApiLogs());
   const [ping, setPing] = useState<string | null>(null);
@@ -80,7 +83,8 @@ function DeveloperPanel({ onClose }: { onClose: () => void }) {
 
   function saveBase() {
     setApiBase(base);
-    setPing(`Saved API base → ${getApiBase()}`);
+    setInferenceKey(apiKey);
+    setPing(`Saved API base → ${getApiBase()}${apiKey ? " (key set)" : ""}`);
   }
 
   async function runHealthPing() {
@@ -127,9 +131,25 @@ function DeveloperPanel({ onClose }: { onClose: () => void }) {
         autoCorrect="off"
         spellCheck={false}
       />
+
+      <label className="mt-3 block text-xs font-semibold text-sub" htmlFor="dev-api-key">
+        Inference API key (x-api-key for /hax)
+      </label>
+      <input
+        id="dev-api-key"
+        value={apiKey}
+        onChange={(e) => setApiKey(e.target.value)}
+        placeholder="nbk-…"
+        type="password"
+        className="mt-1 w-full rounded-md bg-bg px-3 py-2 font-mono text-sm text-ink ring-1 ring-line outline-none focus:ring-gold"
+        autoCapitalize="off"
+        autoCorrect="off"
+        spellCheck={false}
+      />
+
       <div className="mt-2 flex flex-wrap gap-2">
         <PrimaryButton type="button" onClick={saveBase} className="min-h-[40px] flex-1 !text-sm">
-          Save base
+          Save
         </PrimaryButton>
         <GhostButton
           type="button"
